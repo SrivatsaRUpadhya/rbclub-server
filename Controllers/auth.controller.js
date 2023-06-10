@@ -7,13 +7,13 @@ const prisma = require("../utils/db");
 const register = async (req, res) => {
     //Wrap this inside an async wrapper
     try {
-        const { Name, Phone, Email, Usn, Role,profileImg, Password } = req.body;
+        const { Name, Phone, Email, Usn, Role, profileImg, Password } = req.body;
         console.log(req.body);
         if (await prisma.users.findFirst({ where: { email: Email } })) {
             return res.status(200).json({ message: "User already exists!" })
         }
 
-        const refreshToken = jwt.sign(Email, refreshTokenSecret);
+        const refreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
         await prisma.users.create({
             data: {
                 name: Name,
@@ -30,8 +30,7 @@ const register = async (req, res) => {
         const accessToken = jwt.sign(Email, accessTokenSecret);
 
         res.cookie("accessToken", accessToken, { httpOnly: true });
-        res.cookie("refreshToken", refreshToken, { httpOnly: true });
-        return res.status(200).json({ message: "success" });
+        return res.status(200).jsoEmailn({ message: "success" });
     } catch (error) {
         console.log(error);
         res.status(502).send("An error occurred!");
@@ -41,16 +40,17 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     //Wrap this inside an async wrapper
     try {
-        const { email, password } = req.body;
+        const { Email, Password } = req.body;
         const user = await prisma.users.findUnique({
             where: {
-                email
+                email: Email
             }
         });
 
         if (user) {
-            if (await checkPassword(password, prisma.user.password)) {
-                const accessToken = jwt.sign(phone, accessTokenSecret, { expiresIn: '1h' });
+            console.log(user);
+            if (await checkPassword(Password, user.password)) {
+                const accessToken = jwt.sign({ data: Email }, accessTokenSecret, { expiresIn: '1h' });
                 res.cookie("accessToken", accessToken, { httpOnly: true });
                 return res.status(200).json({ message: "success" });
             }
@@ -70,9 +70,35 @@ const login = async (req, res) => {
 
 const me = async (req, res) => {
     const { accessToken } = req.cookies;
+    if (!accessToken) {
+        return res.status(200).json({ message: "Login First!" })
+    }
     try {
         jwt.verify(accessToken, accessTokenSecret)
-        const email = jwt.decode(accessToken, accessTokenSecret);
+    }
+    catch (error) {
+        if (error.name === "TokenExpiredError") {
+            try {
+                const email = await jwt.decode(accessToken, accessTokenSecret).data;
+                await prisma.users.findFirst({
+                    where: {
+                        email
+                    }
+                })
+
+                jwt.verify(user.refreshToken, refreshTokenSecret)
+                accessToken = jwt.sign({ data: email }, accessTokenSecret, { expiresIn: '1h' });
+
+            } catch (error) {
+                if (error.message === "TokenExpiredError") {
+                    res.clearCookie("accessToken");
+                    return res.status(302).redirect("/")
+                }
+            }
+        }
+    }
+    try {
+        const email = await jwt.decode(accessToken, accessTokenSecret).data;
         const user = await prisma.users.findUnique({
             where: {
                 email
@@ -84,7 +110,14 @@ const me = async (req, res) => {
                 email: true
             }
         });
-        res.status(200).json({ user, message: "success" })
+        res.status(200).json({
+            user: {
+                Name: user.name,
+                ProfileImg: user.profileImg,
+                Role: user.role,
+                Email: user.email
+            }, message: "success"
+        })
     } catch (error) {
         console.log(error);
         res.status(200).json({ message: "An error occurred!" })
@@ -93,7 +126,6 @@ const me = async (req, res) => {
 
 const logout = (req, res) => {
     res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
     res.status(200).json({ message: "success" })
 }
 module.exports = { register, login, me, logout };
