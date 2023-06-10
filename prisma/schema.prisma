@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id           BigInt   @default(autoincrement())
+  userID       String   @unique @default(uuid())
+  name         String
+  phone        String
+  usn          String
+  email        String   @unique
+  password     String
+  profileImg   String
+  role         roles
+  isVerified   Boolean
+  refreshToken String   @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([id])
+  @@index([email])
+}
+
+enum roles {
+  IOT
+  INVENTORY
+  DOCUMENTATION
+  MANAGE_EVENTS
+}
