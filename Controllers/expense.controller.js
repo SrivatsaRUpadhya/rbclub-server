@@ -37,7 +37,7 @@ const getExpenseByUser = async (req, res) => {
         return res.status(200).json({ message: "success", expenses })
     } catch (error) {
         console.log(error);
-        return res.send(500).json({ message: "An error occurred!" })
+        return res.status(500).json({ message: "An error occurred!" })
     }
 }
 
