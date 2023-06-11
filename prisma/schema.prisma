@@ -11,22 +11,38 @@ datasource db {
 }
 
 model Users {
-  id           BigInt   @default(autoincrement())
-  userID       String   @unique @default(uuid())
+  id           BigInt     @default(autoincrement())
+  userID       String     @unique @default(uuid())
   name         String
   phone        String
   usn          String
-  email        String   @unique
+  email        String     @unique
   password     String
   profileImg   String
   role         roles
   isVerified   Boolean
-  refreshToken String   @db.Text
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  refreshToken String     @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  expenses     Expenses[]
 
   @@index([id])
   @@index([email])
+}
+
+model Expenses {
+  id        BigInt     @default(autoincrement())
+  user      Users      @relation(fields: [user_ID], references: [userID])
+  user_ID   String
+  expenseID String     @unique @default(uuid())
+  desc      Json
+  status    status
+  catagory  catagories
+  price     Float
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([id])
 }
 
 enum roles {
@@ -35,4 +51,15 @@ enum roles {
   DOCUMENTATION
   MANAGE_EVENTS
   WORKSHOP
+}
+
+enum catagories {
+  IOT
+  WARBOT
+  STATIONARY
+}
+
+enum status {
+  PENDING
+  APPROVED
 }
