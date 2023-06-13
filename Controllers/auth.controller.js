@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { accessTokenSecret, refreshTokenSecret, serverURL } = require("../utils/secrets");
+const { accessTokenSecret, refreshTokenSecret, serverURL, clientURL } = require("../utils/secrets");
 const { checkPassword, hashPassword } = require('../utils/passwords');
 const prisma = require("../utils/db");
 
@@ -68,7 +68,7 @@ const register = async (req, res) => {
         const accessToken = jwt.sign(Email, accessTokenSecret);
 
         res.cookie("accessToken", accessToken, {
-            sameSite: "strict",
+            sameSite: true,
             expires: new Date(Date.now() + 900000),
             httpOnly: true
         });
@@ -93,7 +93,7 @@ const login = async (req, res) => {
             if (await checkPassword(Password, user.password)) {
                 const accessToken = jwt.sign({ data: Email }, accessTokenSecret, { expiresIn: '1h' });
                 res.cookie("accessToken", accessToken, {
-                    sameSite: "strict",
+                    sameSite: true,
                     expires: new Date(Date.now() + 900000),
                     httpOnly: true
                 });
