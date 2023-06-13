@@ -10,6 +10,8 @@ const auth = async (req, res, next) => {
     }
     try {
         jwt.verify(accessToken, accessTokenSecret)
+        res.locals.email = await jwt.decode(accessToken, accessTokenSecret).data;
+        next();
     }
     catch (error) {
         if (error.name === "TokenExpiredError") {
@@ -21,20 +23,22 @@ const auth = async (req, res, next) => {
                     }
                 })
 
-                jwt.verify(user.refreshToken, refreshTokenSecret)
-                accessToken = jwt.sign({ data: email }, accessTokenSecret, { expiresIn: '1h' });
-
+                if (jwt.verify(user.refreshToken, refreshTokenSecret)) {
+                    accessToken = jwt.sign({ data: email }, accessTokenSecret, { expiresIn: '1h' });
+                    res.locals.email = await jwt.decode(accessToken, accessTokenSecret).data;
+                    next();
+                }
             } catch (error) {
+                console.log(error);
                 if (error.message === "TokenExpiredError") {
                     res.clearCookie("accessToken");
-                    return res.status(302).redirect("/")
+                    return res.status(403).redirect("/")
                 }
+                return res.status(500).json({ message: "An error occurred!" })
+
             }
         }
-    }
-    finally {
-        res.locals.email = await jwt.decode(accessToken, accessTokenSecret).data;
-        next();
+        res.send("IDK")
     }
 }
 
@@ -131,6 +135,6 @@ const me = async (req, res) => {
 
 const logout = (req, res) => {
     res.clearCookie("accessToken");
-    res.status(200).json({ message: "success" })
+    return res.status(200).json({ message: "success" })
 }
 module.exports = { register, login, me, logout, auth };
