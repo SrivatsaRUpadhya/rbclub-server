@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { accessTokenSecret, refreshTokenSecret } = require("../utils/secrets");
+const { accessTokenSecret, refreshTokenSecret, serverURL } = require("../utils/secrets");
 const { checkPassword, hashPassword } = require('../utils/passwords');
 const prisma = require("../utils/db");
 
@@ -67,7 +67,11 @@ const register = async (req, res) => {
         })
         const accessToken = jwt.sign(Email, accessTokenSecret);
 
-        res.cookie("accessToken", accessToken, { httpOnly: true });
+        res.cookie("accessToken", accessToken, {
+            sameSite: "strict",
+            expires: new Date(Date.now() + 900000),
+            httpOnly: true
+        });
         return res.status(200).json({ message: "success" });
     } catch (error) {
         console.log(error);
@@ -88,7 +92,11 @@ const login = async (req, res) => {
         if (user) {
             if (await checkPassword(Password, user.password)) {
                 const accessToken = jwt.sign({ data: Email }, accessTokenSecret, { expiresIn: '1h' });
-                res.cookie("accessToken", accessToken, { httpOnly: true });
+                res.cookie("accessToken", accessToken, {
+                    sameSite: "strict",
+                    expires: new Date(Date.now() + 900000),
+                    httpOnly: true
+                });
                 return res.status(200).json({ message: "success" });
             }
             else {

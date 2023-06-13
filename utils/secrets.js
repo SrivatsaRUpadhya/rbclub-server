@@ -5,6 +5,7 @@ const secrets = {
     accessTokenSecret: process.env.ACCESS_TOKEN_SECRET,
     refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,
     clientURL: process.env.CLIENT_URL,
+    serverURL: process.env.SERVER_URL
 };
 
 module.exports = secrets
