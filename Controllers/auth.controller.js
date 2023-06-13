@@ -68,7 +68,6 @@ const register = async (req, res) => {
         const accessToken = jwt.sign(Email, accessTokenSecret);
 
         res.cookie("accessToken", accessToken, {
-            sameSite: true,
             expires: new Date(Date.now() + 900000),
             httpOnly: true
         });
@@ -93,7 +92,6 @@ const login = async (req, res) => {
             if (await checkPassword(Password, user.password)) {
                 const accessToken = jwt.sign({ data: Email }, accessTokenSecret, { expiresIn: '1h' });
                 res.cookie("accessToken", accessToken, {
-                    sameSite: true,
                     expires: new Date(Date.now() + 900000),
                     httpOnly: true
                 });
