@@ -33,7 +33,7 @@ model Users {
 
 model Expenses {
   id        BigInt     @default(autoincrement())
-  user      Users      @relation(fields: [user_ID], references: [userID])
+  user      Users      @relation(fields: [user_ID], references: [userID], onDelete: Cascade)
   user_ID   String
   expenseID String     @unique @default(uuid())
   desc      Json
@@ -44,6 +44,7 @@ model Expenses {
   updatedAt DateTime   @updatedAt
 
   @@index([id])
+  @@index([user_ID])
 }
 
 enum roles {
