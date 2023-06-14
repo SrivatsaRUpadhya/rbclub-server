@@ -12,7 +12,6 @@ const auth = async (req, res, next) => {
     try {
         jwt.verify(accessToken, accessTokenSecret)
         res.locals.email = await jwt.decode(accessToken, accessTokenSecret).data;
-        console.log(res.locals.email);
         next();
     }
     catch (error) {
@@ -70,8 +69,10 @@ const register = async (req, res) => {
             const accessToken = jwt.sign(Email, accessTokenSecret);
 
             res.cookie("accessToken", accessToken, {
-                expires: new Date(Date.now() + 900000),
-                httpOnly: true
+                expires: new Date(Date.now() + 60000),
+                httpOnly: true,
+                sameSite: "None",
+                secure: true
             });
             return res.status(200).json({ message: "success" });
         }
@@ -107,8 +108,10 @@ const login = async (req, res) => {
                 if (await checkPassword(Password, user.password)) {
                     const accessToken = jwt.sign({ data: Email }, accessTokenSecret, { expiresIn: '1h' });
                     res.cookie("accessToken", accessToken, {
-                        expires: new Date(Date.now() + 900000),
-                        httpOnly: true
+                        expires: new Date(Date.now() + 60000),
+                        httpOnly: true,
+                        sameSite: "None",
+                        secure: true
                     });
                     return res.status(200).json({ message: "success" });
                 }
@@ -173,8 +176,8 @@ const deleteAccount = async (req, res) => {
                 res.clearCookie("accessToken");
                 return res.status(200).json({ message: "success" });
             }
-            else{
-                return res.status(200).json({message:"Incorrect password"})
+            else {
+                return res.status(200).json({ message: "Incorrect password" })
             }
         }
     )
