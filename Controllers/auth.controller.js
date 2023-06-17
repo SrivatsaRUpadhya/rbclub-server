@@ -32,7 +32,12 @@ const auth = async (req, res, next) => {
             } catch (error) {
                 console.log(error);
                 if (error.message === "TokenExpiredError") {
-                    res.clearCookie("accessToken");
+                    res.clearCookie("accessToken", {
+                        expires: new Date(Date.now() + 3600000),
+                        httpOnly: true,
+                        sameSite: "None",
+                        secure: true
+                    });
                     return res.status(403).redirect("/")
                 }
                 return res.status(500).json({ message: "An error occurred!" })
@@ -42,6 +47,9 @@ const auth = async (req, res, next) => {
     }
 }
 
+const getAllUsers = async () => {
+    return await prisma.users.findMany();
+}
 const register = async (req, res) => {
     await asyncWrapper(req, res,
         async (req, res) => {
@@ -152,12 +160,61 @@ const me = async (req, res) => {
     )
 }
 
+const editUserAccess = async (req, res) => {
+    asyncWrapper(req, res,
+        async (req, res) => {
+            const email = res.locals.email
+            const user = await prisma.users.findUnique({
+                where: {
+                    email
+                }
+            })
+            if (user.hasAccessTo == "ADMIN") {
+                const { newAccess, userToUpdate } = req.body;
+                await prisma.users.update({
+                    where: {
+                        userID: userToUpdate
+                    },
+                    data: {
+                        hasAccessTo: newAccess
+                    }
+                })
+                return res.status(200).json({ message: "success", data: await getAllUsers() })
+            }
+            return res.status(403).json({ message: "Oops! You don't have access to this" })
+        })
+}
+const verifyUser = async (req, res) => {
+    asyncWrapper(req, res,
+        async (req, res) => {
+            const email = res.locals.email
+            const user = await prisma.users.findUnique({
+                where: {
+                    email
+                }
+            })
+            if (user.hasAccessTo == "ADMIN") {
+                const { userToVerify } = req.body;
+                await prisma.users.update({
+                    where: {
+                        userID: userToVerify
+                    },
+                    data: {
+                        isVerified: true
+                    }
+                })
+                return res.status(200).json({ message: "success", data: await getAllUsers() })
+            }
+            return res.status(403).json({ message: "Oops! You don't have access to this" })
+        })
+}
+
 const logout = (req, res) => {
-    res.clearCookie("accessToken",{
-        expires: new Date(Date.now()+3600000),
-        secure:true,
-        httpOnly:true,
-        sameSite:"None"
+    res.clearCookie("accessToken", {
+        expires: new Date(Date.now() + 3600000),
+        httpOnly: true,
+        sameSite: "None",
+        secure: true
     });
     return res.status(200).json({ message: "success" })
 }
@@ -178,7 +235,12 @@ const deleteAccount = async (req, res) => {
                         email
                     }
                 })
-                res.clearCookie("accessToken");
+                res.clearCookie("accessToken", {
+                    expires: new Date(Date.now() + 3600000),
+                    httpOnly: true,
+                    sameSite: "None",
+                    secure: true
+                });
                 return res.status(200).json({ message: "success" });
             }
             else {
@@ -187,4 +249,4 @@ const deleteAccount = async (req, res) => {
         }
     )
 }
-module.exports = { register, login, me, logout, auth, deleteAccount };
+module.exports = { register, login, me, logout, auth, deleteAccount, editUserAccess, verifyUser };

@@ -1,61 +1,94 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
 model Users {
-  id           BigInt     @default(autoincrement())
-  userID       String     @unique @default(uuid())
+  id           BigInt      @default(autoincrement())
+  userID       String      @unique @default(uuid())
   name         String
   phone        String
   usn          String
-  email        String     @unique
+  email        String      @unique
   password     String
   profileImg   String
   role         roles
+  hasAccessTo  accesses
   isVerified   Boolean
-  refreshToken String     @db.Text
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  refreshToken String      @db.Text
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
   expenses     Expenses[]
+  Inventory    Inventory[]
 
   @@index([id])
   @@index([email])
 }
 
 model Expenses {
-  id        BigInt     @default(autoincrement())
-  user      Users      @relation(fields: [user_ID], references: [userID], onDelete: Cascade)
+  id        BigInt             @default(autoincrement())
+  user      Users              @relation(fields: [user_ID], references: [userID], onDelete: NoAction)
   user_ID   String
-  expenseID String     @unique @default(uuid())
+  expenseID String             @unique @default(uuid())
   desc      Json
   status    status
-  catagory  catagories
+  catagory  expense_catagories
   price     Float
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([id])
+  @@index([user_ID])
+}
+
+model Inventory {
+  id        BigInt               @default(autoincrement())
+  user      Users                @relation(fields: [user_ID], references: [userID], onDelete: NoAction)
+  user_ID   String
+  itemID    String               @unique @default(uuid())
+  quantity  Int
+  catagory  inventory_catagories
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
   @@index([id])
   @@index([user_ID])
 }
 
 enum roles {
+  PRESIDENT
+  VICE_PRESIDENT
+  CAPTAIN
+  SENIOR
+  TREASURER
+  MEMBER
   IOT
   INVENTORY
   DOCUMENTATION
-  MANAGE_EVENTS
-  WORKSHOP
+  MEDIA_AND_PUBLICITY
+  EVENT_LEAD
+  CORE_MEMBER
 }
 
-enum catagories {
+enum accesses {
+  ADMIN
+  INVENTORY
+  DOCUMENTATION
+  MEDIA_AND_PUBLICITY
+}
+
+enum expense_catagories {
+  IOT
+  WARBOT
+  STATIONARY
+}
+
+enum inventory_catagories {
   IOT
   WARBOT
   STATIONARY

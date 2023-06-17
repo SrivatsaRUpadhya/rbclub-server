@@ -6,6 +6,7 @@ const cookie = require('cookie-parser');
 const { clientURL } = require('./utils/secrets');
 
 const authRouter = require("./Routes/auth.router")
+const inventoryRouter = require("./Routes/inventory.router")
 const expensesRouter = require("./Routes/expenses.router")
 
 app.use((req, res, next) => {
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use(cookie())
 app.get("/", (req, res) => res.send("Live"))
 app.use(authRouter)
+app.use(inventoryRouter)
 app.use(expensesRouter)
 
 app.listen(process.env.PORT, () => {
