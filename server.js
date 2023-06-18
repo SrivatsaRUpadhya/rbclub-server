@@ -8,6 +8,8 @@ const { clientURL } = require('./utils/secrets');
 const authRouter = require("./Routes/auth.router")
 const inventoryRouter = require("./Routes/inventory.router")
 const expensesRouter = require("./Routes/expenses.router")
+const eventsRouter = require("./Routes/events.router")
+const usersRouter = require("./Routes/users.router")
 
 app.use((req, res, next) => {
     res.set('Access-Control-Allow-Origin', clientURL);
@@ -22,6 +24,8 @@ app.get("/", (req, res) => res.send("Live"))
 app.use(authRouter)
 app.use(inventoryRouter)
 app.use(expensesRouter)
+app.use(eventsRouter)
+app.use(usersRouter)
 
 app.listen(process.env.PORT, () => {
     console.log(`Server live on port: ${process.env.PORT}`);

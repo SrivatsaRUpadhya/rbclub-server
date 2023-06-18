@@ -9,7 +9,7 @@ datasource db {
 }
 
 model Users {
-  id           BigInt      @default(autoincrement())
+  id           BigInt      @id @default(autoincrement())
   userID       String      @unique @default(uuid())
   name         String
   phone        String
@@ -17,21 +17,24 @@ model Users {
   email        String      @unique
   password     String
   profileImg   String
-  role         roles
-  hasAccessTo  accesses
-  isVerified   Boolean
+  role         roles       @default(MEMBER)
+  hasAccessTo  accesses    @default(NO_EDIT_ACCESS)
+  isVerified   Boolean     @default(false)
   refreshToken String      @db.Text
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   expenses     Expenses[]
   Inventory    Inventory[]
+  Events       Events[]
+  eventID      String?
 
   @@index([id])
   @@index([email])
+  @@index([eventID])
 }
 
 model Expenses {
-  id        BigInt             @default(autoincrement())
+  id        BigInt             @id @default(autoincrement())
   user      Users              @relation(fields: [user_ID], references: [userID], onDelete: NoAction)
   user_ID   String
   expenseID String             @unique @default(uuid())
@@ -47,7 +50,7 @@ model Expenses {
 }
 
 model Inventory {
-  id        BigInt               @default(autoincrement())
+  id        BigInt               @id @default(autoincrement())
   user      Users                @relation(fields: [user_ID], references: [userID], onDelete: NoAction)
   user_ID   String
   itemID    String               @unique @default(uuid())
@@ -58,6 +61,23 @@ model Inventory {
 
   @@index([id])
   @@index([user_ID])
+}
+
+model Events {
+  id          BigInt    @id @default(autoincrement())
+  eventName   String
+  eventID     String    @unique @default(uuid())
+  catagory    String
+  desc        String    @db.Text
+  max_entries Int
+  users       Users[]
+  eventDate   DateTime?
+  userID      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([id])
+  @@index([userID])
 }
 
 enum roles {
@@ -78,8 +98,10 @@ enum roles {
 enum accesses {
   ADMIN
   INVENTORY
+  EVENTS
   DOCUMENTATION
   MEDIA_AND_PUBLICITY
+  NO_EDIT_ACCESS
 }
 
 enum expense_catagories {

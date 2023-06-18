@@ -3,11 +3,12 @@ const { accessTokenSecret, refreshTokenSecret, serverURL, clientURL } = require(
 const { checkPassword, hashPassword } = require('../utils/passwords');
 const prisma = require("../utils/db");
 const asyncWrapper = require("../utils/asyncWrapper")
+const { roles, accesses } = require("@prisma/client")
 
 const auth = async (req, res, next) => {
     const { accessToken } = req.cookies;
     if (!accessToken) {
-        return res.status(403).json({ message: "Invalid Request!" })
+        return res.status(401).json({ message: "Unauthorized Request!" })
     }
     try {
         jwt.verify(accessToken, accessTokenSecret)
@@ -38,7 +39,7 @@ const auth = async (req, res, next) => {
                         sameSite: "None",
                         secure: true
                     });
-                    return res.status(403).redirect("/")
+                    return res.status(401).json({ message: "Session expired!" })
                 }
                 return res.status(500).json({ message: "An error occurred!" })
 
@@ -47,14 +48,12 @@ const auth = async (req, res, next) => {
     }
 }
 
-const getAllUsers = async () => {
-    return await prisma.users.findMany();
-}
+
 const register = async (req, res) => {
     await asyncWrapper(req, res,
         async (req, res) => {
             //Wrap this inside an async wrapper
-            const { Name, Phone, Email, Usn, Role, profileImg, Password } = req.body;
+            const { Name, Phone, Email, Usn, profileImg, Password } = req.body;
             console.log(req.body);
             if (await prisma.users.findFirst({ where: { email: Email } })) {
                 return res.status(200).json({ message: "User already exists!" })
@@ -67,14 +66,13 @@ const register = async (req, res) => {
                     phone: Phone,
                     email: Email,
                     usn: Usn,
-                    role: Role,
                     profileImg,
                     password: await hashPassword(Password),
                     refreshToken,
-                    isVerified: true
+                    Events:{}
                 }
             })
-            const accessToken = jwt.sign(Email, accessTokenSecret);
+            const accessToken = jwt.sign({ data: Email }, accessTokenSecret, { expiresIn: '1h' });
 
             res.cookie("accessToken", accessToken, {
                 expires: new Date(Date.now() + 3600000),
@@ -145,6 +143,8 @@ const me = async (req, res) => {
                     name: true,
                     profileImg: true,
                     role: true,
+                    hasAccessTo:true,
+                    usn:true,
                     email: true
                 }
             });
@@ -153,60 +153,13 @@ const me = async (req, res) => {
                     Name: user.name,
                     ProfileImg: user.profileImg,
                     Role: user.role,
-                    Email: user.email
+                    Email: user.email,
+                    Usn:user.usn,
+                    Permissions:user.hasAccessTo
                 }, message: "success"
             })
         }
     )
-}
-
-const editUserAccess = async (req, res) => {
-    asyncWrapper(req, res,
-        async (req, res) => {
-            const email = res.locals.email
-            const user = await prisma.users.findUnique({
-                where: {
-                    email
-                }
-            })
-            if (user.hasAccessTo == "ADMIN") {
-                const { newAccess, userToUpdate } = req.body;
-                await prisma.users.update({
-                    where: {
-                        userID: userToUpdate
-                    },
-                    data: {
-                        hasAccessTo: newAccess
-                    }
-                })
-                return res.status(200).json({ message: "success", data: await getAllUsers() })
-            }
-            return res.status(403).json({ message: "Oops! You don't have access to this" })
-        })
-}
-const verifyUser = async (req, res) => {
-    asyncWrapper(req, res,
-        async (req, res) => {
-            const email = res.locals.email
-            const user = await prisma.users.findUnique({
-                where: {
-                    email
-                }
-            })
-            if (user.hasAccessTo == "ADMIN") {
-                const { userToVerify } = req.body;
-                await prisma.users.update({
-                    where: {
-                        userID: userToVerify
-                    },
-                    data: {
-                        isVerified: true
-                    }
-                })
-                return res.status(200).json({ message: "success", data: await getAllUsers() })
-            }
-            return res.status(403).json({ message: "Oops! You don't have access to this" })
-        })
 }
 
 const logout = (req, res) => {
@@ -249,4 +202,4 @@ const deleteAccount = async (req, res) => {
         }
     )
 }
-module.exports = { register, login, me, logout, auth, deleteAccount, editUserAccess, verifyUser };
+module.exports = { register, login, me, logout, auth, deleteAccount };
