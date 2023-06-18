@@ -1,8 +1,8 @@
 const router = require('express').Router();
 const { auth } = require("../Controllers/auth.controller");
-const { addEvent, getEvents } = require('../Controllers/events.controller');
-router.post("/api/inventory/addEvents", auth, addEvent);
-router.post("/api/inventory/getAllEvents", auth, getEvents);
+const { addEvent, getEvents, verifyAccessToEvents } = require('../Controllers/events.controller');
+router.post("/api/events/addEvents", auth, verifyAccessToEvents, addEvent);
+router.post("/api/events/getAllEvents", auth, verifyAccessToEvents, getEvents);
 // router.post("/api/inventory/me", inventory, me);
 // router.delete("/api/inventory/logout", logout)
 // router.post("/api/inventory/deleteAccount", auth, deleteAccount)

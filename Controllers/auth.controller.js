@@ -54,7 +54,6 @@ const register = async (req, res) => {
         async (req, res) => {
             //Wrap this inside an async wrapper
             const { Name, Phone, Email, Usn, profileImg, Password } = req.body;
-            console.log(req.body);
             if (await prisma.users.findFirst({ where: { email: Email } })) {
                 return res.status(200).json({ message: "User already exists!" })
             }

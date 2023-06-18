@@ -1,4 +1,5 @@
 const prisma = require("../utils/db");
+const asyncWrapper = require("../utils/asyncWrapper");
 
 const findExpensesByUser = async (userID) => {
     try {
@@ -23,8 +24,8 @@ const findExpensesByUser = async (userID) => {
 }
 
 const getExpenseByUser = async (req, res) => {
-    const email = res.locals.email;
-    try {
+    asyncWrapper(req, res, async (req, res) => {
+        const email = res.locals.email;
         const user = await prisma.users.findUnique({
             where: {
                 email
@@ -35,22 +36,19 @@ const getExpenseByUser = async (req, res) => {
         })
         const expenses = await findExpensesByUser(user.userID)
         return res.status(200).json({ message: "success", expenses })
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ message: "An error occurred!" })
-    }
+    })
 }
 
 const addExpense = async (req, res) => {
-    const { List, Catagory } = req.body;
-    let amount = 0;
-    List.map((element) => {
-        amount += parseFloat(element["Price"]);
-    })
-    if (amount == 0) {
-        return res.status(200).json({ message: "Please enter appropriate data" });
-    }
-    try {
+    asyncWrapper(req, res, async (req, res) => {
+        const { List, Catagory } = req.body;
+        let amount = 0;
+        List.map((element) => {
+            amount += parseFloat(element["Price"]);
+        })
+        if (amount == 0) {
+            return res.status(200).json({ message: "Please enter appropriate data" });
+        }
 
         const email = res.locals.email;
         const user = await prisma.users.findUnique({
@@ -73,15 +71,11 @@ const addExpense = async (req, res) => {
         })
         const userExpenses = await findExpensesByUser(user.userID)
         return res.status(200).json({ message: "success", expenses: userExpenses })
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ message: "An error occurred" })
-    }
+    })
 }
 
 const deleteExpense = async (req, res) => {
-    const email = res.locals.email;
-    try {
+    asyncWrapper(req, res, async (req, res) => {
         const { expenseID } = req.body;
         if (!expenseID) return res.send(403).json({ message: "Invalid request!" })
 
@@ -92,14 +86,11 @@ const deleteExpense = async (req, res) => {
         })
 
         return res.status(200).json({ message: "success" })
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ message: "A error occurred!" })
-    }
+    })
 }
 
 const getAllExpenses = async (req, res) => {
-    try {
+    asyncWrapper(req, res, async (req, res) => {
         const allExpenses = await prisma.expenses.findMany({
             select: {
                 userID: true,
@@ -111,10 +102,7 @@ const getAllExpenses = async (req, res) => {
             }
         });
         return res.status(200).json({ message: "success", allExpenses });
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ message: "An error occurred!" });
-    }
+    })
 }
 
 

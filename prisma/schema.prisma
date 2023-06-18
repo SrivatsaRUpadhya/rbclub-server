@@ -53,6 +53,7 @@ model Inventory {
   id        BigInt               @id @default(autoincrement())
   user      Users                @relation(fields: [user_ID], references: [userID], onDelete: NoAction)
   user_ID   String
+  itemName  String
   itemID    String               @unique @default(uuid())
   quantity  Int
   catagory  inventory_catagories
@@ -99,7 +100,8 @@ enum accesses {
   ADMIN
   INVENTORY
   EVENTS
-  DOCUMENTATION
+  DOCUMENTS
+  EXPENSES
   MEDIA_AND_PUBLICITY
   NO_EDIT_ACCESS
 }

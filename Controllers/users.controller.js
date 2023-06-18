@@ -57,7 +57,6 @@ const editUser = async (req, res) => {
     asyncWrapper(req, res,
         async (req, res) => {
             const { newAccess, userToUpdate, NewRole } = req.body;
-            console.log(req.body);
             await prisma.users.update({
                 where: {
                     userID: userToUpdate
