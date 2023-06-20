@@ -2,7 +2,6 @@ const prisma = require("../utils/db")
 const asyncWrapper = require("../utils/asyncWrapper")
 const { checkPassword } = require("../utils/passwords")
 
-
 const verifyAccessToEvents = async (req, res, next) => {
     const isAllowed = await asyncWrapper(req, res,
         async (req, res) => {
@@ -19,6 +18,10 @@ const verifyAccessToEvents = async (req, res, next) => {
             return false
         })
     isAllowed && next()
+}
+
+const verifyAccess = async (req, res) => {
+    return res.status(200).json({ message: "success" })
 }
 
 const fetchEvents = async () => {
@@ -51,9 +54,41 @@ const addEvent = async (req, res) => {
             })
         })
         const inventoryItems = await fetchEvents()
-        return res.status(200).json({ message: "sucess", data: inventoryItems })
+        return res.status(200).json({ message: "success", data: inventoryItems })
     })
 }
+
+const editEvent = async (req, res) => {
+    await asyncWrapper(req, res, async (req, res) => {
+        const { EventID, EventName, Catagory, Description, newDate, MaxEntries } = req.body
+        await prisma.events.update({
+            where: {
+                eventID: EventID
+            },
+            data: {
+                eventName: EventName,
+                catagory: Catagory,
+                desc: Description,
+                eventDate: newDate ? new Date(newDate) : undefined,
+                max_entries: MaxEntries ? parseInt(MaxEntries) : undefined
+            }
+        })
+    })
+    res.status(200).json({ message: "success" })
+}
+
+const deleteEvent = async (req, res) => {
+    await asyncWrapper(req, res, async (req, res) => {
+        const { EventID } = req.body
+        await prisma.events.delete({
+            where: {
+                eventID: EventID
+            }
+        })
+    })
+    res.status(200).json({ message: "success" })
+}
+
 
 const getEvents = async (req, res) => {
     await asyncWrapper(req, res, async (req, res) => {
@@ -61,4 +96,4 @@ const getEvents = async (req, res) => {
     })
 }
 
-module.exports = { addEvent, getEvents, verifyAccessToEvents }
+module.exports = { addEvent, getEvents, verifyAccessToEvents, verifyAccess, editEvent, deleteEvent }

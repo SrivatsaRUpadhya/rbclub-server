@@ -38,28 +38,35 @@ const fetchInventory = async () => {
 
 const addItem = async (req, res) => {
     await asyncWrapper(req, res, async (req, res) => {
-        const { List, Catagory } = req.body
+        const { List } = req.body
         const user = await prisma.users.findUnique({
             where: {
                 email: res.locals.email
             }
         })
-        List.map(async element => {
-            await prisma.inventory.create({
-                data: {
-                    quantity: parseInt(element.Quantity),
-                    catagory: element.Catagory,
-                    itemName: element.Name,
-                    user: {
-                        connect: {
-                            userID: user.userID
+        async function addItems() {
+            try {
+                List.map(async element => {
+                    await prisma.inventory.create({
+                        data: {
+                            quantity: parseInt(element.Quantity),
+                            catagory: element.Catagory,
+                            itemName: element.Name,
+                            user: {
+                                connect: {
+                                    userID: user.userID
+                                }
+                            }
                         }
-                    }
-                }
-            })
-        })
+                    })
+                })
+            } catch (error) {
+                throw new Error(error)
+            }
+        };
+        await addItems();
         const inventoryItems = await fetchInventory(user.userID)
-        return res.status(200).json({ message: "sucess", data: inventoryItems })
+        return res.status(200).json({ message: "success", data: inventoryItems })
     })
 }
 
@@ -75,4 +82,33 @@ const getInventoryCategories = async (req, res) => {
     })
 }
 
-module.exports = { addItem, getInventory, verifyAccessToInventory, getInventoryCategories }
+const editItem = async (req, res) => {
+    await asyncWrapper(req, res, async (req, res) => {
+        const { ItemID, Quantity, Catagory, ItemName } = req.body
+        await prisma.inventory.update({
+            where: {
+                itemID: ItemID
+            },
+            data: {
+                quantity: Quantity ? parseInt(Quantity) : undefined,
+                catagory: Catagory,
+                itemName: ItemName
+            }
+        })
+        return res.status(200).json({ message: "success" })
+    })
+}
+
+const deleteItem = async (req, res) => {
+    await asyncWrapper(req, res, async (req, res) => {
+        const { itemID } = req.body
+        await prisma.inventory.delete({
+            where: {
+                itemID
+            }
+        })
+        return res.status(200).json({ message: "success" })
+    })
+}
+
+module.exports = { addItem, getInventory, verifyAccessToInventory, getInventoryCategories, editItem, deleteItem }

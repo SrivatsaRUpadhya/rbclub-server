@@ -69,8 +69,7 @@ const addExpense = async (req, res) => {
                 }
             }
         })
-        const userExpenses = await findExpensesByUser(user.userID)
-        return res.status(200).json({ message: "success", expenses: userExpenses })
+        return res.status(200).json({ message: "success" })
     })
 }
 
