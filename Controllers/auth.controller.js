@@ -98,7 +98,7 @@ const login = async (req, res) => {
                 jwt.verify(user.refreshToken, refreshTokenSecret);
             } catch (error) {
                 if (error.name === "TokenExpiredError") {
-                    const newRefreshToken = jwt.sign(prisma.users)
+                    const newRefreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
                     prisma.users.update({
                         where: {
                             email: Email
