@@ -52,6 +52,8 @@ const addItem = async (req, res) => {
                             quantity: parseInt(element.Quantity),
                             catagory: element.Catagory,
                             itemName: element.Name,
+                            condition: element.Condition,
+                            remarks: element.Remarks,
                             user: {
                                 connect: {
                                     userID: user.userID
@@ -84,7 +86,7 @@ const getInventoryCategories = async (req, res) => {
 
 const editItem = async (req, res) => {
     await asyncWrapper(req, res, async (req, res) => {
-        const { ItemID, Quantity, Catagory, ItemName } = req.body
+        const { ItemID, Quantity, Catagory, ItemName, Condition, Remarks } = req.body
         await prisma.inventory.update({
             where: {
                 itemID: ItemID
@@ -92,7 +94,9 @@ const editItem = async (req, res) => {
             data: {
                 quantity: Quantity ? parseInt(Quantity) : undefined,
                 catagory: Catagory,
-                itemName: ItemName
+                itemName: ItemName,
+                remarks: Remarks,
+                condition: Condition
             }
         })
         return res.status(200).json({ message: "success" })

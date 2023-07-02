@@ -144,6 +144,13 @@ const me = async (req, res) => {
                     role: true,
                     hasAccessTo:true,
                     usn:true,
+                    Events:{
+                        select:{
+                            eventID:true,
+                            eventDate:true,
+                            eventName:true
+                        }
+                    },
                     email: true
                 }
             });
@@ -154,7 +161,8 @@ const me = async (req, res) => {
                     Role: user.role,
                     Email: user.email,
                     Usn:user.usn,
-                    Permissions:user.hasAccessTo
+                    Permissions:user.hasAccessTo,
+                    Events:user.Events
                 }, message: "success"
             })
         }

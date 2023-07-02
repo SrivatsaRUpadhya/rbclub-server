@@ -24,11 +24,28 @@ const verifyAccess = async (req, res) => {
     return res.status(200).json({ message: "success" })
 }
 
-const fetchEvents = async () => {
-    return await prisma.events.findMany({
+const fetchEvents = async (fetchType) => {
+    return fetchType == "Admin" ? await prisma.events.findMany({
         select: {
             id: false,
-            users: true,
+            users: {
+                select: {
+                    userID: true,
+                    name: true,
+                    usn: true
+                }
+            },
+            eventID: true,
+            catagory: true,
+            desc: true,
+            eventName: true,
+            eventDate: true,
+            max_entries: true
+        }
+    }) : await prisma.events.findMany({
+        select: {
+            id: false,
+            users: false,
             eventID: true,
             catagory: true,
             desc: true,
@@ -74,7 +91,52 @@ const editEvent = async (req, res) => {
             }
         })
     })
-    res.status(200).json({ message: "success" })
+    return res.status(200).json({ message: "success" })
+}
+
+const registerForEvent = async (req, res) => {
+    await asyncWrapper(req, res, async (req, res) => {
+        const { EventID } = req.body;
+        const email = res.locals.email;
+        const user = await prisma.users.findUnique({
+            where: {
+                email
+            }
+        })
+
+        await prisma.users.update({
+            where: {
+                email
+            },
+            data: {
+                Events: {
+                    connect: {
+                        eventID: EventID
+                    }
+                }
+            },
+            include: {
+                Events: true
+            }
+        })
+
+        await prisma.events.update({
+            where: {
+                eventID: EventID
+            },
+            data: {
+                users: {
+                    connect: {
+                        userID: user.userID
+                    }
+                }
+            }
+            , include: {
+                users: true
+            }
+        })
+        return res.status(200).json({ message: "success" })
+    })
 }
 
 const deleteEvent = async (req, res) => {
@@ -92,8 +154,17 @@ const deleteEvent = async (req, res) => {
 
 const getEvents = async (req, res) => {
     await asyncWrapper(req, res, async (req, res) => {
-        res.status(200).json({ message: "success", data: await fetchEvents() })
+        const email = res.locals.email;
+        const user = await prisma.users.findUnique({
+            where: {
+                email
+            }
+        })
+        if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "EVENTS") {
+            return res.status(200).json({ message: "success", data: await fetchEvents("Admin") })
+        }
+        return res.status(200).json({ message: "success", data: await fetchEvents() })
     })
 }
 
-module.exports = { addEvent, getEvents, verifyAccessToEvents, verifyAccess, editEvent, deleteEvent }
+module.exports = { addEvent, getEvents, verifyAccessToEvents, verifyAccess, editEvent, registerForEvent, deleteEvent }
