@@ -27,6 +27,8 @@ const fetchInventory = async () => {
                 itemName: true,
                 quantity: true,
                 catagory: true,
+                condition: true,
+                remarks: true,
                 user_ID: true,
                 createdAt: true
             }
