@@ -69,6 +69,8 @@ const editUser = async (req, res) => {
             return res.status(200).json({ message: "success", data: await getAllUsers() })
         })
 }
+
+//This function is soon to become obsolete
 const verifyUser = async (req, res) => {
     asyncWrapper(req, res,
         async (req, res) => {
@@ -85,4 +87,22 @@ const verifyUser = async (req, res) => {
         })
 }
 
-module.exports = { editUser, verifyUser, usersList, getRolesAndPermissions, verifyAccessToResorce }
+const setUserInfo = async(req,res)=>{
+	asyncWrapper(req,res,
+	async(req,res)=>{
+		const {Email, YearOfStudy, Interests, USN, Phone} = req.body;
+		await prisma.users.update({
+			where:{
+				email:Email
+			},
+			data:{
+				usn:USN,
+				interests:Interests,
+				yearOfStudy:YearOfStudy,
+				phone:Phone
+			}
+		});
+		res.status(200).json({message:"success"})
+	})
+}
+module.exports = { editUser, verifyUser, usersList, getRolesAndPermissions, verifyAccessToResorce, setUserInfo }

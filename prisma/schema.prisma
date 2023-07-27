@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,23 +12,27 @@ datasource db {
 model Users {
   id           BigInt      @id @default(autoincrement())
   userID       String      @unique @default(uuid())
-  name         String
-  phone        String
-  usn          String
+  name         String?
+  phone        String?
+  usn          String?
   email        String      @unique
-  password     String
-  profileImg   String
+  course	   courses?
+  password     String?
+  profileImg   String?
   role         roles       @default(MEMBER)
   hasAccessTo  accesses    @default(NO_EDIT_ACCESS)
+  Inventory    Inventory[]
+  Events       Events[]
+  interests	   String?
+  dob		   DateTime?
+  eventID      String?
+  expenses     Expenses[]
   isVerified   Boolean     @default(false)
+  isProfileComplete   Boolean     @default(false)
   refreshToken String      @db.Text
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
-  expenses     Expenses[]
-  Inventory    Inventory[]
-  Events       Events[]
-  eventID      String?
-
+  yearOfStudy  Int?
   @@index([id])
   @@index([email])
   @@index([eventID])
@@ -124,3 +129,20 @@ enum status {
   PENDING
   APPROVED
 }
+
+enum courses{
+    ARTIFICIAL_INTELLIGENCE_DATA_SCIENCE
+    ARTIFICIAL_INTELLIGENCE_MACHINE_LEARNING
+    BIOTECHNOLOGY
+    CIVIL_ENGINEERING
+    COMPUTER_COMMUNICATION_ENGINEERING
+    COMPUTER_SCIENCE_ENGINEERING
+    COMPUTER_SCIENCE_FULL_STACK_DEVELOPMENT
+    COMPUTER_SCIENCE_CYBER_SECURITY
+	ELECTRICAL_ELECTRONICS_ENGINEERING
+    ELECTRONICS_COMMUNICATION_ENGINEERING
+    ELECTRONICS_VLSI_DESIGN_TECHNOLOGY
+    INFORMATION_SCIENCE_ENGINEERING
+    MECHANICAL_ENGINEERING
+    ROBOTICS_ARTIFICIAL_INTELLIGENCE
+	}
