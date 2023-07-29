@@ -55,26 +55,30 @@ const register = async (req, res) => {
 	await asyncWrapper(req, res,
 		async (req, res) => {
 			//Wrap this inside an async wrapper
-			const { OTP, Email, Password } = req.body;
+			const { Otp, Email, Password } = req.body;
 
-			if(Email && !OTP && !Password){
+			if(Email && !Otp && !Password){
 				const user = await getUserByEmail(Email); 
+				console.log(user);
 				if (user && user.isVerified) {
 					return res.status(200).json({ message: "User exists!", user })
 				}else{
+					if(!user){
+						const refreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
+						await prisma.users.create({
+							data:{
+								email:Email,
+								refreshToken
+							}
+						})
+					}
+
 					const otp = await sendMail(Email)
 					if(otp == -1){
 						return res.status(200).json({message:"An Error Occurred"})
 					}
-					otpList.set(Email,otp);
-					const refreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
+					otpList.set(Email,otp);	
 
-					await prisma.users.create({
-						data:{
-							email:Email,
-							refreshToken
-						}
-					})
 					const otpCookie = jwt.sign({data:Email},refreshTokenSecret, {expiresIn:'10m'});
 					res.cookie("otpCookie",otpCookie, {
 						expires: new Date(Date.now() + 600000),
@@ -84,27 +88,27 @@ const register = async (req, res) => {
 					})
 					return res.status(200).json({message:"OTP sent"})
 				}
-			}else if(!Email && !Password && OTP){
-				const {otpCookie} = req.cookie;
+			}else if(!Email && !Password && Otp){
+				const {otpCookie} = req.cookies;
 				if(!otpCookie){					
 					otpList.delete(email_from_cookie);
 					return res.status(200).json({message:"OTP Expired"});
 				}
+				console.log(otpList)
 				try{
 					jwt.verify(otpCookie, refreshTokenSecret);
 					const email_from_cookie = jwt.decode(otpCookie,refreshTokenSecret).data
 
-					if(OTP === otpList.get(email_from_cookie)){
+					if(parseInt(Otp) === otpList.get(email_from_cookie)){
 
-						await prisma.users.update({
-							where:{
-								email:email_from_cookie
-							},
-							data:{
-								isVerified:true
-							}
-						})
 						otpList.delete(email_from_cookie);
+						const accessToken = jwt.sign({ data: email_from_cookie }, accessTokenSecret, { expiresIn: '1h' });
+						res.cookie("accessToken", accessToken, {
+							expires: new Date(Date.now() + 3600000),
+							httpOnly: true,
+							sameSite: "None",
+							secure: true
+						});
 						return res.status(200).json({message:"Verification Success"});
 					}
 					else{
@@ -116,8 +120,32 @@ const register = async (req, res) => {
 					console.log(error);
 					return res.status(200).json({message:"An error occurred!"});
 				}
-			}		}
-	)
+			}else if(Password){
+				await auth(req,res);
+				await prisma.users.update({
+					where:{
+						email:res.locals.email
+					},
+					data:{
+						password:await hashPassword(Password)
+					}
+
+				})
+				await prisma.users.update({
+							where:{
+								email: res.locals.email
+							},
+							data:{
+								isVerified:true
+							}
+						})
+
+				res.status(200).json({message:"success"});
+			}
+			else{
+				return res.status(200).json({message:"Could not parse request!"})
+			}
+		})
 }
 
 const login = async (req, res) => {
@@ -197,7 +225,7 @@ const me = async (req, res) => {
 	await asyncWrapper(req, res,
 		async (req, res) => {
 			const email = res.locals.email;
-			const user = getUserByEmail(email)			
+			const user = await getUserByEmail(email)			
 			res.status(200).json({
 				user: {
 					Name: user.name,

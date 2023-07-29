@@ -3,7 +3,7 @@ const { accessTokenSecret, refreshTokenSecret, serverURL, clientURL } = require(
 const { checkPassword, hashPassword } = require('../utils/passwords');
 const prisma = require("../utils/db");
 const asyncWrapper = require("../utils/asyncWrapper")
-const { roles, accesses } = require("@prisma/client")
+const { roles, accesses, courses } = require("@prisma/client")
 
 const verifyAccessToResorce = async (req, res, next) => {
     const isAllowed = await asyncWrapper(req, res,
@@ -30,6 +30,12 @@ const getRolesAndPermissions = async (req, res) => {
         })
 }
 
+const getDeptList = async (req, res) => {
+    await asyncWrapper(req, res,
+        async (req, res) => {
+            return res.status(200).json({ message: "success", Departments:courses })
+        })
+}
 const getAllUsers = async () => {
     return await prisma.users.findMany({
         select: {
@@ -90,19 +96,22 @@ const verifyUser = async (req, res) => {
 const setUserInfo = async(req,res)=>{
 	asyncWrapper(req,res,
 	async(req,res)=>{
-		const {Email, YearOfStudy, Interests, USN, Phone} = req.body;
+		const {Department, Name, YearOfStudy, Interests, USN, Phone, DOB} = req.body;
 		await prisma.users.update({
 			where:{
-				email:Email
+				email: res.locals.email
 			},
 			data:{
+				name:Name,
 				usn:USN,
 				interests:Interests,
-				yearOfStudy:YearOfStudy,
-				phone:Phone
+				yearOfStudy: parseInt(YearOfStudy),
+				phone:Phone,
+				dob:new Date(DOB),
+				course:Department
 			}
 		});
 		res.status(200).json({message:"success"})
 	})
 }
-module.exports = { editUser, verifyUser, usersList, getRolesAndPermissions, verifyAccessToResorce, setUserInfo }
+module.exports = { editUser, verifyUser, usersList, getRolesAndPermissions, verifyAccessToResorce, setUserInfo, getDeptList }
