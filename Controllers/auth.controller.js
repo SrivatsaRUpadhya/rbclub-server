@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');auth
+const jwt = require('jsonwebtoken');
 const { accessTokenSecret, refreshTokenSecret, serverURL, clientURL } = require("../utils/secrets");
 const { checkPassword, hashPassword } = require('../utils/passwords');
 const prisma = require("../utils/db");
