@@ -77,7 +77,7 @@ const editUser = async (req, res) => {
 }
 
 //This function is soon to become obsolete
-const verifyUser = async (req, res) => {
+const verifyPayment = async (req, res) => {
     asyncWrapper(req, res,
         async (req, res) => {
             const { userToVerify } = req.body;
@@ -86,7 +86,7 @@ const verifyUser = async (req, res) => {
                     userID: userToVerify
                 },
                 data: {
-                    isVerified: true
+					paymentStatus: "RECEIVED"
                 }
             })
             return res.status(200).json({ message: "success", data: await getAllUsers() })
@@ -96,7 +96,7 @@ const verifyUser = async (req, res) => {
 const setUserInfo = async(req,res)=>{
 	asyncWrapper(req,res,
 	async(req,res)=>{
-		const {Department, Name, YearOfStudy, Interests, USN, Phone, DOB} = req.body;
+		const {Department, Name, YearOfStudy, Interests, USN, Phone, DOB, PaymentID} = req.body;
 		await prisma.users.update({
 			where:{
 				email: res.locals.email
@@ -108,10 +108,11 @@ const setUserInfo = async(req,res)=>{
 				yearOfStudy: parseInt(YearOfStudy),
 				phone:Phone,
 				dob:new Date(DOB),
-				course:Department
+				course:Department,
+				paymentID: PaymentID
 			}
 		});
 		res.status(200).json({message:"success"})
 	})
 }
-module.exports = { editUser, verifyUser, usersList, getRolesAndPermissions, verifyAccessToResorce, setUserInfo, getDeptList }
+module.exports = { editUser, verifyPayment, usersList, getRolesAndPermissions, verifyAccessToResorce, setUserInfo, getDeptList }

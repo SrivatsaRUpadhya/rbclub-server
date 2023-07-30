@@ -5,6 +5,7 @@ const prisma = require("../utils/db");
 const asyncWrapper = require("../utils/asyncWrapper")
 //const { roles, accesses } = require("@prisma/client");
 const { sendMail } = require('../utils/sendOTP');
+const generateUID = require("../utils/generateUID");
 const otpList = new Map();
 
 const auth = async (req, res, next) => {
@@ -64,11 +65,15 @@ const register = async (req, res) => {
 					return res.status(200).json({ message: "User exists!", user })
 				}else{
 					if(!user){
+						const allUsers = await prisma.users.findMany();
+						const prevUser = allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
+
 						const refreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
 						await prisma.users.create({
 							data:{
 								email:Email,
-								refreshToken
+								refreshToken,
+								IDCardNum: prevUser ? generateUID(prevUser) : ("RCN"+new Date().getFullYear()+"0A01")
 							}
 						})
 					}

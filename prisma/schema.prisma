@@ -12,6 +12,7 @@ datasource db {
 model Users {
   id           BigInt      @id @default(autoincrement())
   userID       String      @unique @default(uuid())
+  IDCardNum	   String?
   name         String?
   phone        String?
   usn          String?
@@ -28,6 +29,8 @@ model Users {
   eventID      String?
   expenses     Expenses[]
   isVerified   Boolean     @default(false)
+  paymentID String?
+  paymentStatus paymentStatus @default(PENDING)
   isProfileComplete   Boolean     @default(false)
   refreshToken String      @db.Text
   createdAt    DateTime    @default(now())
@@ -145,4 +148,9 @@ enum courses{
     INFORMATION_SCIENCE_ENGINEERING
     MECHANICAL_ENGINEERING
     ROBOTICS_ARTIFICIAL_INTELLIGENCE
+	}
+
+	enum paymentStatus{
+		PENDING
+		RECEIVED
 	}
