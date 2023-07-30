@@ -111,7 +111,7 @@ const setUserInfo = async(req,res)=>{
 				interests:Interests,
 				yearOfStudy: parseInt(YearOfStudy),
 				phone:Phone,
-				dob:new Date(DOB),
+				dob: DOB ? new Date(DOB) : undefined, 
 				course:Department,
 				paymentID: PaymentID,
 				isProfileComplete:profileStatus
