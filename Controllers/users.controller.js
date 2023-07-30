@@ -109,7 +109,7 @@ const setUserInfo = async(req,res)=>{
 				name:Name,
 				usn:USN,
 				interests:Interests,
-				yearOfStudy: parseInt(YearOfStudy),
+				yearOfStudy:YearOfStudy ?  parseInt(YearOfStudy) : undefined,
 				phone:Phone,
 				dob: DOB ? new Date(DOB) : undefined, 
 				course:Department,
