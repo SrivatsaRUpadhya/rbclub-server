@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');auth
 const { accessTokenSecret, refreshTokenSecret, serverURL, clientURL } = require("../utils/secrets");
 const { checkPassword, hashPassword } = require('../utils/passwords');
 const prisma = require("../utils/db");
@@ -60,7 +60,6 @@ const register = async (req, res) => {
 
 			if(Email && !Otp && !Password){
 				const user = await getUserByEmail(Email); 
-				console.log(user);
 				if (user && user.isVerified) {
 					return res.status(200).json({ message: "User exists!", user })
 				}else{
@@ -99,8 +98,7 @@ const register = async (req, res) => {
 					otpList.delete(email_from_cookie);
 					return res.status(200).json({message:"OTP Expired"});
 				}
-				console.log(otpList)
-				try{
+			try{
 					jwt.verify(otpCookie, refreshTokenSecret);
 					const email_from_cookie = jwt.decode(otpCookie,refreshTokenSecret).data
 
@@ -221,7 +219,9 @@ const getUserByEmail = async(email) => {
 				}
 			},
 			email: true,
-			isProfileComplete: true
+			isProfileComplete: true,
+			isVerified:true,
+			IDCardNum:true,
 		}
 	});
 
@@ -239,7 +239,9 @@ const me = async (req, res) => {
 					Email: user.email,
 					Usn:user.usn,
 					Permissions:user.hasAccessTo,
-					Events:user.Events
+					Events:user.Events,
+					ID:user.IDCardNum,
+					Intrests:user.interests
 				}, message: "success"
 			})
 		}

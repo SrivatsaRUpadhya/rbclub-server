@@ -97,6 +97,10 @@ const setUserInfo = async(req,res)=>{
 	asyncWrapper(req,res,
 	async(req,res)=>{
 		const {Department, Name, YearOfStudy, Interests, USN, Phone, DOB, PaymentID} = req.body;
+		let profileStatus = false;
+		if(Department && Name && YearOfStudy && Interests && USN && Phone && DOB){
+			profileStatus = true;
+		}
 		await prisma.users.update({
 			where:{
 				email: res.locals.email
@@ -109,7 +113,8 @@ const setUserInfo = async(req,res)=>{
 				phone:Phone,
 				dob:new Date(DOB),
 				course:Department,
-				paymentID: PaymentID
+				paymentID: PaymentID,
+				isProfileComplete:profileStatus
 			}
 		});
 		res.status(200).json({message:"success"})
