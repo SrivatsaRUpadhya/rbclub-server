@@ -241,7 +241,7 @@ const me = async (req, res) => {
 					Permissions:user.hasAccessTo,
 					Events:user.Events,
 					ID:user.IDCardNum,
-					Intrests:user.interests
+					Interests:user.interests
 				}, message: "success"
 			})
 		}
