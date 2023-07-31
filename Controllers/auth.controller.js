@@ -98,7 +98,7 @@ const register = async (req, res) => {
 					otpList.delete(email_from_cookie);
 					return res.status(200).json({message:"OTP Expired"});
 				}
-			try{
+				try{
 					jwt.verify(otpCookie, refreshTokenSecret);
 					const email_from_cookie = jwt.decode(otpCookie,refreshTokenSecret).data
 
@@ -135,13 +135,13 @@ const register = async (req, res) => {
 
 				})
 				await prisma.users.update({
-							where:{
-								email: res.locals.email
-							},
-							data:{
-								isVerified:true
-							}
-						})
+					where:{
+						email: res.locals.email
+					},
+					data:{
+						isVerified:true
+					}
+				})
 
 				res.status(200).json({message:"success"});
 			}
@@ -156,27 +156,27 @@ const login = async (req, res) => {
 		async (req, res) => {
 			//Wrap this inside an async wrapper
 			const { Email, Password } = req.body;
-			const user = await prisma.users.findUnique({
-				where: {
-					email: Email
-				}
-			});
-			try {
-				jwt.verify(user.refreshToken, refreshTokenSecret);
-			} catch (error) {
-				if (error.name === "TokenExpiredError") {
-					const newRefreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
-					prisma.users.update({
-						where: {
-							email: Email
-						},
-						data: {
-							refreshToken: newRefreshToken
-						}
-					})
-				}
-			}
+			const user = await getUserByEmail(Email);
+
 			if (user) {
+				try {
+					jwt.verify(user.refreshToken, refreshTokenSecret);
+				} catch (error) {
+					if (error.name === "TokenExpiredError") {
+						const newRefreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
+						prisma.users.update({
+							where: {
+								email: Email
+							},
+							data: {
+								refreshToken: newRefreshToken
+							}
+						})
+					}
+				}
+				if(!user.password){
+					return res.status(200).json({message:"Password not set.\nPlease verify your account and set up a new password!"});
+				}
 				if (await checkPassword(Password, user.password)) {
 					const accessToken = jwt.sign({ data: Email }, accessTokenSecret, { expiresIn: '1h' });
 					res.cookie("accessToken", accessToken, {
@@ -202,27 +202,30 @@ const getUserByEmail = async(email) => {
 		where: {
 			email
 		},
-		select: {
-			name: true,
-			profileImg: true,
-			role: true,
-			dob:true,
-			interests:true,
-			yearOfStudy:true,
-			hasAccessTo:true,
-			usn:true,
-			Events:{
-				select:{
-					eventID:true,
-					eventDate:true,
-					eventName:true
-				}
-			},
-			email: true,
-			isProfileComplete: true,
-			isVerified:true,
-			IDCardNum:true,
-		}
+			select: {
+				name: true,
+				profileImg: true,
+				role: true,
+				dob:true,
+				interests:true,
+				yearOfStudy:true,
+				hasAccessTo:true,
+				usn:true,
+				Events:{
+						select:{
+							eventID:true,
+							eventDate:true,
+							eventName:true
+						}
+				},
+				email: true,
+				isProfileComplete: true,
+				isVerified:true,
+				IDCardNum:true,
+				password:true,
+				paymentID:true,
+				paymentStatus:true,
+			}
 	});
 
 }
@@ -264,7 +267,6 @@ const deleteAccount = async (req, res) => {
 			const email = res.locals.email;
 			const { Password } = req.body;
 			const user = await getUserByEmail(email);
-
 			if (await checkPassword(Password, user.password)) {
 				await prisma.users.delete({
 					where: {
