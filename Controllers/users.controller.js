@@ -47,7 +47,8 @@ const getAllUsers = async () => {
             phone: true,
             role: true,
             isVerified: true,
-            hasAccessTo: true
+            hasAccessTo: true,
+			paymentID:true
         }
     });
 }

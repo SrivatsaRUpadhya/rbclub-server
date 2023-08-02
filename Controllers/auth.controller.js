@@ -244,8 +244,7 @@ const me = async (req, res) => {
 					Permissions:user.hasAccessTo,
 					Events:user.Events,
 					ID:user.IDCardNum,
-					Interests:user.interests,
-					PaymentID: user.paymentID
+					Interests:user.interests	
 				}, message: "success"
 			})
 		}
