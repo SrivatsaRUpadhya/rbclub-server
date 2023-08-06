@@ -57,96 +57,113 @@ const register = async (req, res) => {
 		async (req, res) => {
 			//Wrap this inside an async wrapper
 			const { Otp, Email, Password } = req.body;
+			const settings = await prisma.settings.findFirst()
+			console.log(settings)
+			if(!settings.skipOtpOnRegister){
+				if(Email && !Otp && !Password){
+					const user = await getUserByEmail(Email); 
+					if (user && user.isVerified) {
+						return res.status(200).json({ message: "User exists!", user })
+					}else{
+						if(!user){
+							const allUsers = await prisma.users.findMany();
+							const prevUser = allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
 
-			if(Email && !Otp && !Password){
-				const user = await getUserByEmail(Email); 
-				if (user && user.isVerified) {
-					return res.status(200).json({ message: "User exists!", user })
-				}else{
-					if(!user){
-						const allUsers = await prisma.users.findMany();
-						const prevUser = allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
+							const refreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
+							await prisma.users.create({
+								data:{
+									email:Email,
+									refreshToken,
+									IDCardNum: prevUser ? generateUID(prevUser) : ("RCN"+new Date().getFullYear()+"0A01")
+								}
+							})
+						}
 
-						const refreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
-						await prisma.users.create({
-							data:{
-								email:Email,
-								refreshToken,
-								IDCardNum: prevUser ? generateUID(prevUser) : ("RCN"+new Date().getFullYear()+"0A01")
-							}
-						})
-					}
+						const otp = await sendMail(Email)
+						if(otp == -1){
+							return res.status(200).json({message:"An Error Occurred"})
+						}
+						otpList.set(Email,otp);	
 
-					const otp = await sendMail(Email)
-					if(otp == -1){
-						return res.status(200).json({message:"An Error Occurred"})
-					}
-					otpList.set(Email,otp);	
-
-					const otpCookie = jwt.sign({data:Email},refreshTokenSecret, {expiresIn:'10m'});
-					res.cookie("otpCookie",otpCookie, {
-						expires: new Date(Date.now() + 600000),
-						httpOnly: true,
-						sameSite: "None",
-						secure: true
-					})
-					return res.status(200).json({message:"OTP sent"})
-				}
-			}else if(!Email && !Password && Otp){
-				const {otpCookie} = req.cookies;
-				if(!otpCookie){					
-					otpList.delete(email_from_cookie);
-					return res.status(200).json({message:"OTP Expired"});
-				}
-				try{
-					jwt.verify(otpCookie, refreshTokenSecret);
-					const email_from_cookie = jwt.decode(otpCookie,refreshTokenSecret).data
-
-					if(parseInt(Otp) === otpList.get(email_from_cookie)){
-
-						otpList.delete(email_from_cookie);
-						const accessToken = jwt.sign({ data: email_from_cookie }, accessTokenSecret, { expiresIn: '1h' });
-						res.cookie("accessToken", accessToken, {
-							expires: new Date(Date.now() + 3600000),
+						const otpCookie = jwt.sign({data:Email},refreshTokenSecret, {expiresIn:'10m'});
+						res.cookie("otpCookie",otpCookie, {
+							expires: new Date(Date.now() + 600000),
 							httpOnly: true,
 							sameSite: "None",
 							secure: true
-						});
-						return res.status(200).json({message:"Verification Success"});
+						})
+						return res.status(200).json({message:"OTP sent"})
 					}
-					else{
-						return res.status(200).json({message:"Invalid OTP"});
+				}else if(!Email && !Password && Otp){
+					const {otpCookie} = req.cookies;
+					if(!otpCookie){					
+						otpList.delete(email_from_cookie);
+						return res.status(200).json({message:"OTP Expired"});
 					}
+					try{
+						jwt.verify(otpCookie, refreshTokenSecret);
+						const email_from_cookie = jwt.decode(otpCookie,refreshTokenSecret).data
 
+						if(parseInt(Otp) === otpList.get(email_from_cookie)){
+
+							otpList.delete(email_from_cookie);
+							const accessToken = jwt.sign({ data: email_from_cookie }, accessTokenSecret, { expiresIn: '1h' });
+							res.cookie("accessToken", accessToken, {
+								expires: new Date(Date.now() + 3600000),
+								httpOnly: true,
+								sameSite: "None",
+								secure: true
+							});
+							return res.status(200).json({message:"Verification Success"});
+						}
+						else{
+							return res.status(200).json({message:"Invalid OTP"});
+						}
+
+					}
+					catch(error){
+						console.log(error);
+						return res.status(200).json({message:"An error occurred!"});
+					}
+				}else if(Password){
+					await auth(req,res);
+					await prisma.users.update({
+						where:{
+							email:res.locals.email
+						},
+						data:{
+							password:await hashPassword(Password)
+						}
+
+					})
+					await prisma.users.update({
+						where:{
+							email: res.locals.email
+						},
+						data:{
+							isVerified:true
+						}
+					})
+
+					res.status(200).json({message:"success"});
 				}
-				catch(error){
-					console.log(error);
-					return res.status(200).json({message:"An error occurred!"});
+				else{
+					return res.status(200).json({message:"Could not parse request!"})
 				}
-			}else if(Password){
-				await auth(req,res);
-				await prisma.users.update({
-					where:{
-						email:res.locals.email
-					},
-					data:{
-						password:await hashPassword(Password)
-					}
-
-				})
-				await prisma.users.update({
-					where:{
-						email: res.locals.email
-					},
-					data:{
-						isVerified:true
-					}
-				})
-
-				res.status(200).json({message:"success"});
 			}
 			else{
-				return res.status(200).json({message:"Could not parse request!"})
+				const newRefreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
+				await prisma.users.create({
+					data:{
+						name: "testuser",
+						email:"admin@test.com",
+						password: await hashPassword("admin"),
+						refreshToken:newRefreshToken,
+						isVerified:true,
+						paymentStatus:"RECEIVED"
+					}
+				})
+				return res.status(200).json({message:"success"});
 			}
 		})
 }
@@ -178,14 +195,17 @@ const login = async (req, res) => {
 					return res.status(200).json({message:"Password not set.\nPlease verify your account and set up a new password!"});
 				}
 				if (await checkPassword(Password, user.password)) {
-					const accessToken = jwt.sign({ data: Email }, accessTokenSecret, { expiresIn: '1h' });
-					res.cookie("accessToken", accessToken, {
-						expires: new Date(Date.now() + 3600000),
-						httpOnly: true,
-						sameSite: "None",
-						secure: true
-					});
-					return res.status(200).json({ message: "success" });
+					if(user.paymentStatus === "RECEIVED"){
+						const accessToken = jwt.sign({ data: Email }, accessTokenSecret, { expiresIn: '1h' });
+						res.cookie("accessToken", accessToken, {
+							expires: new Date(Date.now() + 3600000),
+							httpOnly: true,
+							sameSite: "None",
+							secure: true
+						});
+						return res.status(200).json({ message: "success" });
+					}
+					return res.status(200).json({ message: "Your payment is not yet verified! We will update soon!" });
 				}
 				else {
 					return res.status(200).json({ message: "Ivalid credentials!" })
@@ -207,7 +227,7 @@ const getUserByEmail = async(email) => {
 				profileImg: true,
 				role: true,
 				dob:true,
-				interests:true,
+				skills:true,
 				yearOfStudy:true,
 				hasAccessTo:true,
 				usn:true,

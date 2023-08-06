@@ -3,7 +3,7 @@ const { accessTokenSecret, refreshTokenSecret, serverURL, clientURL } = require(
 const { checkPassword, hashPassword } = require('../utils/passwords');
 const prisma = require("../utils/db");
 const asyncWrapper = require("../utils/asyncWrapper")
-const { roles, accesses, courses } = require("@prisma/client")
+const { roles, accesses, courses, skills } = require("@prisma/client")
 
 const verifyAccessToResorce = async (req, res, next) => {
     const isAllowed = await asyncWrapper(req, res,
@@ -34,6 +34,13 @@ const getDeptList = async (req, res) => {
     await asyncWrapper(req, res,
         async (req, res) => {
             return res.status(200).json({ message: "success", Departments:courses })
+        })
+}
+
+const getSkillsList = async (req, res) => {
+    await asyncWrapper(req, res,
+        async (req, res) => {
+            return res.status(200).json({ message: "success", skills})
         })
 }
 const getAllUsers = async () => {
@@ -97,9 +104,9 @@ const verifyPayment = async (req, res) => {
 const setUserInfo = async(req,res)=>{
 	asyncWrapper(req,res,
 	async(req,res)=>{
-		const {Department, Name, YearOfStudy, Interests, USN, Phone, DOB, PaymentID} = req.body;
+		const {Department, Name, YearOfStudy, Skills, USN, Phone, DOB, PaymentID} = req.body;
 		let profileStatus = false;
-		if(Department && Name && YearOfStudy && Interests && USN && Phone && DOB){
+		if(Department && Name && YearOfStudy && Skills && USN && Phone && DOB){
 			profileStatus = true;
 		}
 		await prisma.users.update({
@@ -109,7 +116,7 @@ const setUserInfo = async(req,res)=>{
 			data:{
 				name:Name,
 				usn:USN,
-				interests:Interests,
+				skills:Skills,
 				yearOfStudy:YearOfStudy ?  parseInt(YearOfStudy) : undefined,
 				phone:Phone,
 				dob: DOB ? new Date(DOB) : undefined, 
@@ -121,4 +128,4 @@ const setUserInfo = async(req,res)=>{
 		res.status(200).json({message:"success"})
 	})
 }
-module.exports = { editUser, verifyPayment, usersList, getRolesAndPermissions, verifyAccessToResorce, setUserInfo, getDeptList }
+module.exports = { editUser, verifyPayment, usersList, getRolesAndPermissions, verifyAccessToResorce, setUserInfo, getDeptList, getSkillsList}

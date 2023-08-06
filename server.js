@@ -10,6 +10,7 @@ const inventoryRouter = require("./Routes/inventory.router")
 const expensesRouter = require("./Routes/expenses.router")
 const eventsRouter = require("./Routes/events.router")
 const usersRouter = require("./Routes/users.router")
+const settingsRouter = require("./Routes/settings.router")
 
 var whitelist = [clientURL_1, clientURL_2];
 
@@ -45,6 +46,7 @@ app.use(inventoryRouter)
 app.use(expensesRouter)
 app.use(eventsRouter)
 app.use(usersRouter)
+app.use(settingsRouter)
 
 app.listen(process.env.PORT, () => {
     console.log(`Server live on port: ${process.env.PORT}`);

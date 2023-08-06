@@ -101,9 +101,25 @@ const registerForEvent = async (req, res) => {
         const user = await prisma.users.findUnique({
             where: {
                 email
-            }
+            },
+			select:{
+				userID:true,
+				Events:{
+					select:{
+						eventID:true,
+						eventDate:true,
+						eventName:true
+					}
+				}
+			}
         })
-
+		
+		const settings = await prisma.settings.findFirst();
+		if(settings.eventLimitPerUser !== -1){
+			if(user.Events.length >= settings.eventLimitPerUser){
+				return res.status(200).json({message:"Limit reached!"})
+			}
+		}
         await prisma.users.update({
             where: {
                 email

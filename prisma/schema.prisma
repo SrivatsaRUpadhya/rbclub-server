@@ -24,7 +24,7 @@ model Users {
   hasAccessTo  accesses    @default(NO_EDIT_ACCESS)
   Inventory    Inventory[]
   Events       Events[]
-  interests	   String?
+  skills	   skills?
   dob		   DateTime?
   eventID      String?
   expenses     Expenses[]
@@ -91,6 +91,18 @@ model Events {
   @@index([userID])
 }
 
+model Settings{
+	id Int @id @default(autoincrement())
+	maintanenceMode Boolean @default(false)
+	eventLimitPerUser Int @default(-1)
+	skipOtpOnRegister Boolean @default(false)
+	lastUpdatedBy String? 
+	createdAt DateTime @default(now())
+	updatedAt DateTime @default(now())
+
+	@@index([id])
+}
+
 enum roles {
   PRESIDENT
   VICE_PRESIDENT
@@ -153,4 +165,11 @@ enum courses{
 	enum paymentStatus{
 		PENDING
 		RECEIVED
+	}
+
+	enum skills{
+		BEGINNER_EXITED_TO_GET_STARTED @map("A BEGINNER AND EXITED TO GET STARTED")
+		BASICS_WEB_DEV @map("I KNOW BASICS OF WEB DEV")
+		IOT @map("SOMETHING ABOUT IOT")
+		DESIGN @map("I AM MORE INTO DESIGNING(CAD, FUSION 360 etc)")
 	}
