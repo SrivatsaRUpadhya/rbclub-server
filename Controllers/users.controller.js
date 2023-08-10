@@ -55,7 +55,8 @@ const getAllUsers = async () => {
             role: true,
             isVerified: true,
             hasAccessTo: true,
-			paymentID:true
+			paymentID:true,
+			paymentStatus:true
         }
     });
 }
