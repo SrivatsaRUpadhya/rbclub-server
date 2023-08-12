@@ -63,6 +63,7 @@ const register = async (req, res) => {
 				if(Email && !Otp && !Password){
 					const user = await getUserByEmail(Email); 
 					if (user && user.isVerified) {
+						const accessToken = jwt.sign({ data: email_from_cookie }, accessTokenSecret, { expiresIn: '1h' });
 						res.cookie("accessToken", accessToken, {
 							expires: new Date(Date.now() + 3600000),
 							httpOnly: true,
