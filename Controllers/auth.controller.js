@@ -63,6 +63,12 @@ const register = async (req, res) => {
 				if(Email && !Otp && !Password){
 					const user = await getUserByEmail(Email); 
 					if (user && user.isVerified) {
+						res.cookie("accessToken", accessToken, {
+							expires: new Date(Date.now() + 3600000),
+							httpOnly: true,
+							sameSite: "None",
+							secure: true
+						});
 						return res.status(200).json({ message: "User exists!", user })
 					}else{
 						if(!user){
@@ -222,30 +228,30 @@ const getUserByEmail = async(email) => {
 		where: {
 			email
 		},
-			select: {
-				name: true,
-				profileImg: true,
-				role: true,
-				dob:true,
-				skills:true,
-				yearOfStudy:true,
-				hasAccessTo:true,
-				usn:true,
-				Events:{
-						select:{
-							eventID:true,
-							eventDate:true,
-							eventName:true
-						}
-				},
-				email: true,
-				isProfileComplete: true,
-				isVerified:true,
-				IDCardNum:true,
-				password:true,
-				paymentID:true,
-				paymentStatus:true,
-			}
+		select: {
+			name: true,
+			profileImg: true,
+			role: true,
+			dob:true,
+			skills:true,
+			yearOfStudy:true,
+			hasAccessTo:true,
+			usn:true,
+			Events:{
+				select:{
+					eventID:true,
+					eventDate:true,
+					eventName:true
+				}
+			},
+			email: true,
+			isProfileComplete: true,
+			isVerified:true,
+			IDCardNum:true,
+			password:true,
+			paymentID:true,
+			paymentStatus:true,
+		}
 	});
 
 }
