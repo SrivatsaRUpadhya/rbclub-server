@@ -74,7 +74,7 @@ const register = async (req, res) => {
 								data:{
 									email:Email,
 									refreshToken,
-									IDCardNum: prevUser ? generateUID(prevUser) : ("RCN"+new Date().getFullYear()+"0A01")
+									IDCardNum: prevUser.IDCardNum ? generateUID(prevUser) : ("RCN"+new Date().getFullYear()+"0A01")
 								}
 							})
 						}

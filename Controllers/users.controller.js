@@ -30,6 +30,19 @@ const getRolesAndPermissions = async (req, res) => {
         })
 }
 
+const getSkillsAndEvents = async (req, res) => {
+    await asyncWrapper(req, res,
+        async (req, res) => {
+			const Events = await prisma.events.findMany({
+				select:{
+					eventID:true,
+					eventName:true
+				}
+			});
+            return res.status(200).json({ message: "success", data: { Skills:skills, Events } })
+        })
+}
+
 const getDeptList = async (req, res) => {
     await asyncWrapper(req, res,
         async (req, res) => {
@@ -129,4 +142,4 @@ const setUserInfo = async(req,res)=>{
 		res.status(200).json({message:"success"})
 	})
 }
-module.exports = { editUser, verifyPayment, usersList, getRolesAndPermissions, verifyAccessToResorce, setUserInfo, getDeptList, getSkillsList}
+module.exports = { editUser, verifyPayment, usersList, getRolesAndPermissions, verifyAccessToResorce, setUserInfo, getDeptList, getSkillsList,  getSkillsAndEvents}
