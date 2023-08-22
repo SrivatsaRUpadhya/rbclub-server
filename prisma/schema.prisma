@@ -32,7 +32,6 @@ model Users {
   paymentStatus paymentStatus @default(PENDING)
   isProfileComplete   Boolean     @default(false)
   refreshToken String      @db.Text
-  accessToken String?      @db.Text
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   yearOfStudy  Int?

@@ -3,7 +3,6 @@ const oauth2Client = require("../utils/oauth2Client");
 const {
 	accessTokenSecret,
 	refreshTokenSecret,
-	clientURL_1,
 	clientURL_2,
 } = require("../utils/secrets");
 const { checkPassword, hashPassword } = require("../utils/passwords");
@@ -27,7 +26,12 @@ const auth = async (req, res, next) => {
 			},
 		});
 		if (user.paymentStatus === "PENDING") {
-			return res.status(200).json({ message: "Payment Pending" });
+			return res
+				.status(200)
+				.json({
+					message: "Incomplete Profile",
+					user: await getUserByEmail(res.locals.email),
+				});
 		}
 		res.locals.user = user;
 		next();
@@ -136,7 +140,6 @@ const handleRedirect = async (req, res) => {
 						? generateUID(prevUser)
 						: "RCN" + new Date().getFullYear() + "0A01",
 					refreshToken: tokens.refresh_token,
-					accessToken: tokens.access_token,
 				},
 			});
 		}
@@ -208,6 +211,8 @@ const me = async (req, res) => {
 				isProfileComplete: user.isProfileComplete,
 				DOB: user.dob,
 				YearOfStudy: user.yearOfStudy,
+				PaymentID: user.paymentID,
+				PaymentStatus: user.paymentStatus,
 			},
 			message: "success",
 		});
