@@ -152,6 +152,7 @@ const handleRedirect = async (req, res) => {
 			httpOnly: true,
 			sameSite: "None",
 			secure: true,
+			domain:"http://localhost:5000/"
 		});
 		return res.redirect(`${clientURL_2}/register`);
 	});
