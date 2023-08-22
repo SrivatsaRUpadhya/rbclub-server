@@ -1,36 +1,55 @@
-const jwt = require('jsonwebtoken');
-const { accessTokenSecret, refreshTokenSecret, serverURL, clientURL } = require("../utils/secrets");
-const { checkPassword, hashPassword } = require('../utils/passwords');
+const jwt = require("jsonwebtoken");
+const oauth2Client = require("../utils/oauth2Client");
+const {
+	accessTokenSecret,
+	refreshTokenSecret,
+	clientURL_1,
+	clientURL_2,
+} = require("../utils/secrets");
+const { checkPassword, hashPassword } = require("../utils/passwords");
 const prisma = require("../utils/db");
-const asyncWrapper = require("../utils/asyncWrapper")
-//const { roles, accesses } = require("@prisma/client");
-const { sendMail } = require('../utils/sendOTP');
+const asyncWrapper = require("../utils/asyncWrapper");
 const generateUID = require("../utils/generateUID");
-const otpList = new Map();
+const { google } = require("googleapis");
 
 const auth = async (req, res, next) => {
 	const { accessToken } = req.cookies;
 	if (!accessToken) {
-		return res.status(401).json({ message: "Unauthorized Request!" })
+		return res.status(401).json({ message: "Unauthorized Request!" });
 	}
 	try {
-		jwt.verify(accessToken, accessTokenSecret)
-		res.locals.email = await jwt.decode(accessToken, accessTokenSecret).data;
+		jwt.verify(accessToken, accessTokenSecret);
+		res.locals.email = await jwt.decode(accessToken, accessTokenSecret)
+			.data;
+		const user = await prisma.users.findUnique({
+			where: {
+				email: res.locals.email,
+			},
+		});
+		if (user.paymentStatus === "PENDING") {
+			return res.status(200).json({ message: "Payment Pending" });
+		}
+		res.locals.user = user;
 		next();
-	}
-	catch (error) {
+	} catch (error) {
 		if (error.name === "TokenExpiredError") {
 			try {
-				const email = await jwt.decode(accessToken, accessTokenSecret).data;
+				const email = await jwt.decode(accessToken, accessTokenSecret)
+					.data;
 				await prisma.users.findFirst({
 					where: {
-						email
-					}
-				})
+						email,
+					},
+				});
 
 				if (jwt.verify(user.refreshToken, refreshTokenSecret)) {
-					accessToken = jwt.sign({ data: email }, accessTokenSecret, { expiresIn: '1h' });
-					res.locals.email = await jwt.decode(accessToken, accessTokenSecret).data;
+					accessToken = jwt.sign({ data: email }, accessTokenSecret, {
+						expiresIn: "1h",
+					});
+					res.locals.email = await jwt.decode(
+						accessToken,
+						accessTokenSecret
+					).data;
 					next();
 				}
 			} catch (error) {
@@ -40,278 +59,201 @@ const auth = async (req, res, next) => {
 						expires: new Date(Date.now() + 3600000),
 						httpOnly: true,
 						sameSite: "None",
-						secure: true
+						secure: true,
 					});
-					return res.status(401).json({ message: "Session expired!" })
+					return res
+						.status(401)
+						.json({ message: "Session expired!" });
 				}
-				return res.status(500).json({ message: "An error occurred!" })
-
+				return res.status(500).json({ message: "An error occurred!" });
 			}
 		}
 	}
-}
-
+};
 
 const register = async (req, res) => {
-	await asyncWrapper(req, res,
-		async (req, res) => {
-			//Wrap this inside an async wrapper
-			const { Otp, Email, Password } = req.body;
-			const settings = await prisma.settings.findFirst()
-			console.log(settings)
-			if(!settings.skipOtpOnRegister){
-				if(Email && !Otp && !Password){
-					const user = await getUserByEmail(Email); 
-					if (user && user.isVerified) {
-						const accessToken = jwt.sign({ data: Email }, accessTokenSecret, { expiresIn: '1h' });
-						res.cookie("accessToken", accessToken, {
-							expires: new Date(Date.now() + 3600000),
-							httpOnly: true,
-							sameSite: "None",
-							secure: true
-						});
-						return res.status(200).json({ message: "User exists!", user })
-					}else{
-						if(!user){
-							const allUsers = await prisma.users.findMany();
-							const prevUser = allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
+	await asyncWrapper(req, res, async (req, res) => {
+		//Wrap this inside an async wrapper
+		const authUrl = oauth2Client.generateAuthUrl({
+			access_type: "offline",
+			scope: [
+				"https://www.googleapis.com/auth/userinfo.profile",
+				"openid",
+				"https://www.googleapis.com/auth/userinfo.email",
+			],
+			include_granted_scopes: true,
+		});
+		//console.log(authUrl);
+		return res.status(200).json({ message: "success", authUrl });
+	});
+};
 
-							const refreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
-							await prisma.users.create({
-								data:{
-									email:Email,
-									refreshToken,
-									IDCardNum: prevUser.IDCardNum ? generateUID(prevUser) : ("RCN"+new Date().getFullYear()+"0A01")
-								}
-							})
-						}
+const handleRedirect = async (req, res) => {
+	await asyncWrapper(req, res, async (req, res) => {
+		//	console.log(req.query?.code || res.query?.error);
+		const { tokens } = req.query.code
+			? await oauth2Client.getToken(req.query.code)
+			: undefined;
+		//Store tokens in  db
+		//	console.log(tokens)
+		const user = jwt.decode(tokens.id_token);
+		const result = await prisma.users.findUnique({
+			where: {
+				email: user.email,
+			},
+			select: {
+				id: false,
+				name: true,
+				usn: true,
+				email: true,
+				phone: true,
+				dob: true,
+				skills: true,
+				isVerified: true,
+				isProfileComplete: true,
+				paymentStatus: true,
+				yearOfStudy: true,
+				course: true,
+				Events: {
+					select: {
+						eventID: true,
+					},
+				},
+			},
+		});
+		if (!result) {
+			const allUsers = await prisma.users.findMany();
+			const prevUser =
+				allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
 
-						const otp = await sendMail(Email)
-						if(otp == -1){
-							return res.status(200).json({message:"An Error Occurred"})
-						}
-						otpList.set(Email,otp);	
-
-						const otpCookie = jwt.sign({data:Email},refreshTokenSecret, {expiresIn:'10m'});
-						res.cookie("otpCookie",otpCookie, {
-							expires: new Date(Date.now() + 600000),
-							httpOnly: true,
-							sameSite: "None",
-							secure: true
-						})
-						return res.status(200).json({message:"OTP sent"})
-					}
-				}else if(!Email && !Password && Otp){
-					const {otpCookie} = req.cookies;
-					if(!otpCookie){					
-						otpList.delete(email_from_cookie);
-						return res.status(200).json({message:"OTP Expired"});
-					}
-					try{
-						jwt.verify(otpCookie, refreshTokenSecret);
-						const email_from_cookie = jwt.decode(otpCookie,refreshTokenSecret).data
-
-						if(parseInt(Otp) === otpList.get(email_from_cookie)){
-
-							otpList.delete(email_from_cookie);
-							const accessToken = jwt.sign({ data: email_from_cookie }, accessTokenSecret, { expiresIn: '1h' });
-							res.cookie("accessToken", accessToken, {
-								expires: new Date(Date.now() + 3600000),
-								httpOnly: true,
-								sameSite: "None",
-								secure: true
-							});
-							return res.status(200).json({message:"Verification Success"});
-						}
-						else{
-							return res.status(200).json({message:"Invalid OTP"});
-						}
-
-					}
-					catch(error){
-						console.log(error);
-						return res.status(200).json({message:"An error occurred!"});
-					}
-				}else if(Password){
-					await auth(req,res);
-					await prisma.users.update({
-						where:{
-							email:res.locals.email
-						},
-						data:{
-							password:await hashPassword(Password)
-						}
-
-					})
-					await prisma.users.update({
-						where:{
-							email: res.locals.email
-						},
-						data:{
-							isVerified:true
-						}
-					})
-
-					res.status(200).json({message:"success"});
-				}
-				else{
-					return res.status(200).json({message:"Could not parse request!"})
-				}
-			}
-			else{
-				const newRefreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
-				await prisma.users.create({
-					data:{
-						name: "testuser",
-						email:"admin@test.com",
-						password: await hashPassword("admin"),
-						refreshToken:newRefreshToken,
-						isVerified:true,
-						paymentStatus:"RECEIVED"
-					}
-				})
-				return res.status(200).json({message:"success"});
-			}
-		})
-}
-
-const login = async (req, res) => {
-	await asyncWrapper(req, res,
-		async (req, res) => {
-			//Wrap this inside an async wrapper
-			const { Email, Password } = req.body;
-			const user = await getUserByEmail(Email);
-
-			if (user) {
-				try {
-					jwt.verify(user.refreshToken, refreshTokenSecret);
-				} catch (error) {
-					if (error.name === "TokenExpiredError") {
-						const newRefreshToken = jwt.sign({ data: Email }, refreshTokenSecret, { expiresIn: '7d' });
-						prisma.users.update({
-							where: {
-								email: Email
-							},
-							data: {
-								refreshToken: newRefreshToken
-							}
-						})
-					}
-				}
-				if(!user.password){
-					return res.status(200).json({message:"Password not set.\nPlease verify your account and set up a new password!"});
-				}
-				if (await checkPassword(Password, user.password)) {
-					if(user.paymentStatus === "RECEIVED"){
-						const accessToken = jwt.sign({ data: Email }, accessTokenSecret, { expiresIn: '1h' });
-						res.cookie("accessToken", accessToken, {
-							expires: new Date(Date.now() + 3600000),
-							httpOnly: true,
-							sameSite: "None",
-							secure: true
-						});
-						return res.status(200).json({ message: "success" });
-					}
-					return res.status(200).json({ message: "Your payment is not yet verified! We will update soon!" });
-				}
-				else {
-					return res.status(200).json({ message: "Ivalid credentials!" })
-				}
-			}
-
-			return res.status(200).json({ message: "User Not Found!" })
+			await prisma.users.create({
+				data: {
+					email: user.email,
+					isVerified: user.email_verified,
+					profileImg: user.picture,
+					name: user.name,
+					IDCardNum: prevUser.IDCardNum
+						? generateUID(prevUser)
+						: "RCN" + new Date().getFullYear() + "0A01",
+					refreshToken: tokens.refresh_token,
+					//					access_token: tokens.access_token,
+				},
+			});
 		}
-	)
-}
+		const accessToken = jwt.sign({ data: user.email }, accessTokenSecret, {
+			expiresIn: "24h",
+		});
 
-const getUserByEmail = async(email) => {
+		res.cookie("accessToken", accessToken, {
+			expires: new Date(Date.now() + 3600000 * 24),
+			httpOnly: true,
+			sameSite: "None",
+			secure: true,
+		});
+		return res.redirect(`${clientURL_2}/register`);
+	});
+};
+
+const getUserByEmail = async (email) => {
 	return await prisma.users.findUnique({
 		where: {
-			email
+			email,
 		},
 		select: {
 			name: true,
 			profileImg: true,
 			role: true,
-			dob:true,
-			skills:true,
-			yearOfStudy:true,
-			hasAccessTo:true,
-			usn:true,
-			Events:{
-				select:{
-					eventID:true,
-					eventDate:true,
-					eventName:true
-				}
+			dob: true,
+			skills: true,
+			yearOfStudy: true,
+			hasAccessTo: true,
+			usn: true,
+			Events: {
+				select: {
+					eventID: true,
+					eventDate: true,
+					eventName: true,
+				},
 			},
 			email: true,
 			isProfileComplete: true,
-			isVerified:true,
-			IDCardNum:true,
-			password:true,
-			paymentID:true,
-			paymentStatus:true,
-		}
-	});
+			isVerified: true,
+			IDCardNum: true,
+			password: true,
+			paymentID: true,
+			phone: true,
+			course: true,
+			paymentStatus: true,
 
-}
+		},
+	});
+};
+
 const me = async (req, res) => {
-	await asyncWrapper(req, res,
-		async (req, res) => {
-			const email = res.locals.email;
-			const user = await getUserByEmail(email)			
-			res.status(200).json({
-				user: {
-					Name: user.name,
-					ProfileImg: user.profileImg,
-					Role: user.role,
-					Email: user.email,
-					Usn:user.usn,
-					Permissions:user.hasAccessTo,
-					Events:user.Events,
-					ID:user.IDCardNum,
-					Skills:user.skills
-				}, message: "success"
-			})
-		}
-	)
-}
+	await asyncWrapper(req, res, async (req, res) => {
+		const email = res.locals.email;
+		const user = await getUserByEmail(email);
+		res.status(200).json({
+			user: {
+				Name: user.name,
+				ProfileImg: user.profileImg,
+				Role: user.role,
+				Email: user.email,
+				Usn: user.usn,
+				Permissions: user.hasAccessTo,
+				Events: user.Events,
+				ID: user.IDCardNum,
+				Skills: user.skills,
+				Phone: user.phone,
+				Department: user.course,
+				isProfileComplete: user.isProfileComplete,
+				DOB:user.dob,
+				YearOfStudy:user.yearOfStudy
+			},
+			message: "success",
+		});
+	});
+};
 
 const logout = (req, res) => {
 	res.clearCookie("accessToken", {
 		expires: new Date(Date.now() + 3600000),
 		httpOnly: true,
 		sameSite: "None",
-		secure: true
+		secure: true,
 	});
-	return res.status(200).json({ message: "success" })
-}
+	return res.status(200).json({ message: "success" });
+};
 
 const deleteAccount = async (req, res) => {
-	await asyncWrapper(req, res,
-		async (req, res) => {
-			const email = res.locals.email;
-			const { Password } = req.body;
-			const user = await getUserByEmail(email);
-			if (await checkPassword(Password, user.password)) {
-				await prisma.users.delete({
-					where: {
-						email
-					}
-				})
-				res.clearCookie("accessToken", {
-					expires: new Date(Date.now() + 3600000),
-					httpOnly: true,
-					sameSite: "None",
-					secure: true
-				});
-				return res.status(200).json({ message: "success" });
-			}
-			else {
-				return res.status(200).json({ message: "Incorrect password" })
-			}
+	await asyncWrapper(req, res, async (req, res) => {
+		const email = res.locals.email;
+		const { Password } = req.body;
+		const user = await getUserByEmail(email);
+		if (await checkPassword(Password, user.password)) {
+			await prisma.users.delete({
+				where: {
+					email,
+				},
+			});
+			res.clearCookie("accessToken", {
+				expires: new Date(Date.now() + 3600000),
+				httpOnly: true,
+				sameSite: "None",
+				secure: true,
+			});
+			return res.status(200).json({ message: "success" });
+		} else {
+			return res.status(200).json({ message: "Incorrect password" });
 		}
-	)
-}
-module.exports = { register, login, me, logout, auth, deleteAccount, getUserByEmail };
+	});
+};
+module.exports = {
+	register,
+	me,
+	logout,
+	auth,
+	deleteAccount,
+	getUserByEmail,
+	handleRedirect,
+};
