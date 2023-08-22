@@ -136,7 +136,7 @@ const handleRedirect = async (req, res) => {
 						? generateUID(prevUser)
 						: "RCN" + new Date().getFullYear() + "0A01",
 					refreshToken: tokens.refresh_token,
-					//					access_token: tokens.access_token,
+					accessToken: tokens.access_token,
 				},
 			});
 		}
@@ -184,7 +184,6 @@ const getUserByEmail = async (email) => {
 			phone: true,
 			course: true,
 			paymentStatus: true,
-
 		},
 	});
 };
@@ -207,8 +206,8 @@ const me = async (req, res) => {
 				Phone: user.phone,
 				Department: user.course,
 				isProfileComplete: user.isProfileComplete,
-				DOB:user.dob,
-				YearOfStudy:user.yearOfStudy
+				DOB: user.dob,
+				YearOfStudy: user.yearOfStudy,
 			},
 			message: "success",
 		});
