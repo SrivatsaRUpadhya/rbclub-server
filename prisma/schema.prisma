@@ -10,7 +10,7 @@ datasource db {
 
 model Users {
   id           BigInt      @id @default(autoincrement())
-  userID       String      @unique
+  userID       String      @unique @default(uuid())
   IDCardNum	   String?
   name         String?
   phone        String?
