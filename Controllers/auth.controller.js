@@ -147,7 +147,6 @@ const handleRedirect = async (req, res) => {
 
 		res.cookie("accessToken", accessToken, {
 			expires: new Date(Date.now() + 3600000 * 24),
-			domain: "rbclub-server.onrender.com",
 			path: "/api",
 			httpOnly: true,
 			sameSite: "None",
@@ -222,9 +221,8 @@ const me = async (req, res) => {
 const logout = (req, res) => {
 	res.clearCookie("accessToken", {
 		expires: new Date(Date.now() + 3600000),
+		path:"/api",
 		httpOnly: true,
-		domain: "rbclub-server.onrender.com",
-		path: "/api",
 		sameSite: "None",
 		secure: true,
 	});
