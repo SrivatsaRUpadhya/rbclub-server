@@ -152,7 +152,7 @@ const handleRedirect = async (req, res) => {
 			sameSite: "None",
 			secure: true,
 		});
-		return res.redirect(200, `${clientURL_2}/register`);
+		return res.json({ redirect: `${clientURL_2}/register` });
 	});
 };
 
