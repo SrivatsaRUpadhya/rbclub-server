@@ -149,7 +149,8 @@ const handleRedirect = async (req, res) => {
 			expires: new Date(Date.now() + 3600000 * 24),
 			path: "/api",
 			httpOnly: true,
-			sameSite: "Strict",
+			sameSite: "lax",
+			domain: "rbclub-server.onrender.com",
 		});
 		return res.redirect(`${clientURL_2}/register`);
 	});
@@ -222,7 +223,8 @@ const logout = (req, res) => {
 		expires: new Date(Date.now() + 3600000),
 		path: "/api",
 		httpOnly: true,
-		sameSite: "Strict",
+		sameSite: "lax",
+		domain: "rbclub-server.onrender.com",
 	});
 	return res.status(200).json({ message: "success" });
 };
