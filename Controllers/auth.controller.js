@@ -152,7 +152,7 @@ const handleRedirect = async (req, res) => {
 			sameSite: "None",
 			secure: true,
 		});
-		return res.redirect(`${clientURL_2}/register`);
+		return res.redirect(200, `${clientURL_2}/register`);
 	});
 };
 
@@ -221,7 +221,7 @@ const me = async (req, res) => {
 const logout = (req, res) => {
 	res.clearCookie("accessToken", {
 		expires: new Date(Date.now() + 3600000),
-		path:"/api",
+		path: "/api",
 		httpOnly: true,
 		sameSite: "None",
 		secure: true,

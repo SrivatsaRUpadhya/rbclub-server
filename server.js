@@ -36,7 +36,7 @@ var corsOptions = {
 
 app.options("*", cors(corsOptions));
 app.get("/", (req, res) => res.send("Live"));
-app.post("/api/auth/redirect", handleRedirect);
+app.get("/api/auth/redirect", handleRedirect);
 
 app.use(cors(corsOptions));
 
