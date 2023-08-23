@@ -18,7 +18,7 @@ const { handleRedirect } = require("./Controllers/auth.controller");
 var whitelist = [
 	clientURL_1,
 	clientURL_2,
-	"https://accounts.google.com/o/oauth2/v2/auth",
+	"http://localhost:3000",
 ];
 
 var corsOptions = {

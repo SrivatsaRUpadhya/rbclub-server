@@ -21,18 +21,6 @@ const auth = async (req, res, next) => {
 		jwt.verify(accessToken, accessTokenSecret);
 		res.locals.email = await jwt.decode(accessToken, accessTokenSecret)
 			.data;
-		const user = await prisma.users.findUnique({
-			where: {
-				email: res.locals.email,
-			},
-		});
-		if (user.paymentStatus === "PENDING") {
-			return res.status(200).json({
-				message: "Incomplete Profile",
-				user: await getUserByEmail(res.locals.email),
-			});
-		}
-		res.locals.user = user;
 		next();
 	} catch (error) {
 		if (error.name === "TokenExpiredError") {
@@ -74,6 +62,21 @@ const auth = async (req, res, next) => {
 	}
 };
 
+const userStatus = async (req, res, next) => {
+	const user = await prisma.users.findUnique({
+		where: {
+			email: res.locals.email,
+		},
+	});
+	if (user.paymentStatus === "PENDING") {
+		return res.status(200).json({
+			message: "Incomplete Profile",
+			user: await getUserByEmail(res.locals.email),
+		});
+	}
+	res.locals.user = user;
+	return next();
+};
 const register = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
 		//Wrap this inside an async wrapper
@@ -148,6 +151,8 @@ const handleRedirect = async (req, res) => {
 
 		res.cookie("accessToken", accessToken, {
 			expires: new Date(Date.now() + 3600000 * 24),
+			domain: "roboticsclubnitte.com",
+			path: "/",
 			httpOnly: true,
 			sameSite: "None",
 			secure: true,
@@ -193,7 +198,7 @@ const getUserByEmail = async (email) => {
 const me = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
 		const email = res.locals.email;
-		const user = await getUserByEmail(email);
+		const user = res.locals.user;
 		res.status(200).json({
 			user: {
 				Name: user.name,
@@ -259,4 +264,5 @@ module.exports = {
 	deleteAccount,
 	getUserByEmail,
 	handleRedirect,
+	userStatus,
 };
