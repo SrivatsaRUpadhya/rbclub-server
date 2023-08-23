@@ -151,8 +151,6 @@ const handleRedirect = async (req, res) => {
 
 		res.cookie("accessToken", accessToken, {
 			expires: new Date(Date.now() + 3600000 * 24),
-			domain: "roboticsclubnitte.com",
-			path: "/",
 			httpOnly: true,
 			sameSite: "None",
 			secure: true,
