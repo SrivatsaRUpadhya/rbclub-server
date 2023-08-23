@@ -4,6 +4,7 @@ const {
 	accessTokenSecret,
 	refreshTokenSecret,
 	clientURL_2,
+	clientURL_1,
 } = require("../utils/secrets");
 const { checkPassword, hashPassword } = require("../utils/passwords");
 const prisma = require("../utils/db");
@@ -26,12 +27,10 @@ const auth = async (req, res, next) => {
 			},
 		});
 		if (user.paymentStatus === "PENDING") {
-			return res
-				.status(200)
-				.json({
-					message: "Incomplete Profile",
-					user: await getUserByEmail(res.locals.email),
-				});
+			return res.status(200).json({
+				message: "Incomplete Profile",
+				user: await getUserByEmail(res.locals.email),
+			});
 		}
 		res.locals.user = user;
 		next();
@@ -152,7 +151,6 @@ const handleRedirect = async (req, res) => {
 			httpOnly: true,
 			sameSite: "None",
 			secure: true,
-			domain:"http://localhost:5000/"
 		});
 		return res.redirect(`${clientURL_2}/register`);
 	});

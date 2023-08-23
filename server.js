@@ -31,6 +31,7 @@ var corsOptions = {
 	},
 	credentials: true,
 	allowedHeaders: ["Content-Type"],
+	exposedHeaders: ["set-cookie"],
 };
 
 app.options("*", cors(corsOptions));
