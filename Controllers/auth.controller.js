@@ -149,10 +149,9 @@ const handleRedirect = async (req, res) => {
 			expires: new Date(Date.now() + 3600000 * 24),
 			path: "/api",
 			httpOnly: true,
-			sameSite: "None",
-			secure: true,
+			sameSite: "Strict",
 		});
-		return res.json({ redirect: `${clientURL_2}/register` });
+		return res.redirect(`${clientURL_2}/register`);
 	});
 };
 
@@ -223,8 +222,7 @@ const logout = (req, res) => {
 		expires: new Date(Date.now() + 3600000),
 		path: "/api",
 		httpOnly: true,
-		sameSite: "None",
-		secure: true,
+		sameSite: "Strict",
 	});
 	return res.status(200).json({ message: "success" });
 };
