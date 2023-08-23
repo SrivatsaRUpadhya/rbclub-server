@@ -5,6 +5,7 @@ const {
 	refreshTokenSecret,
 	clientURL_2,
 	clientURL_1,
+	serverURL,
 } = require("../utils/secrets");
 const { checkPassword, hashPassword } = require("../utils/passwords");
 const prisma = require("../utils/db");
@@ -35,23 +36,32 @@ const auth = async (req, res, next) => {
 
 				if (jwt.verify(user.refreshToken, refreshTokenSecret)) {
 					accessToken = jwt.sign({ data: email }, accessTokenSecret, {
-						expiresIn: "1h",
+						expiresIn: "24h",
 					});
-					res.locals.email = await jwt.decode(
-						accessToken,
-						accessTokenSecret
-					).data;
+					res.cookie("accessToken", accessToken, {
+						expires: new Date(Date.now() + 3600000 * 24),
+						domain: serverURL,
+						path: "/api",
+						httpOnly: true,
+						sameSite: "None",
+						secure: true,
+					});
+
+					res.locals.email = email;
 					next();
 				}
 			} catch (error) {
 				console.log(error);
 				if (error.message === "TokenExpiredError") {
 					res.clearCookie("accessToken", {
-						expires: new Date(Date.now() + 3600000),
+						expires: new Date(Date.now() + 3600000 * 24),
+						domain: serverURL,
+						path: "/api",
 						httpOnly: true,
 						sameSite: "None",
 						secure: true,
 					});
+
 					return res
 						.status(401)
 						.json({ message: "Session expired!" });
@@ -147,10 +157,11 @@ const handleRedirect = async (req, res) => {
 
 		res.cookie("accessToken", accessToken, {
 			expires: new Date(Date.now() + 3600000 * 24),
+			domain: serverURL,
 			path: "/api",
 			httpOnly: true,
-			sameSite: "lax",
-			domain: "rbclub-server.onrender.com",
+			sameSite: "None",
+			secure: true,
 		});
 		return res.redirect(`${clientURL_2}/register`);
 	});
@@ -220,11 +231,12 @@ const me = async (req, res) => {
 
 const logout = (req, res) => {
 	res.clearCookie("accessToken", {
-		expires: new Date(Date.now() + 3600000),
+		expires: new Date(Date.now() + 3600000 * 24),
+		domain: serverURL,
 		path: "/api",
 		httpOnly: true,
-		sameSite: "lax",
-		domain: "rbclub-server.onrender.com",
+		sameSite: "None",
+		secure: true,
 	});
 	return res.status(200).json({ message: "success" });
 };
@@ -242,6 +254,8 @@ const deleteAccount = async (req, res) => {
 			});
 			res.clearCookie("accessToken", {
 				expires: new Date(Date.now() + 3600000),
+				domain: serverURL,
+				path: "/api",
 				httpOnly: true,
 				sameSite: "None",
 				secure: true,
