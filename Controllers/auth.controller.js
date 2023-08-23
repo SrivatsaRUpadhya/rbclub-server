@@ -63,12 +63,8 @@ const auth = async (req, res, next) => {
 };
 
 const userStatus = async (req, res, next) => {
-	const user = await prisma.users.findUnique({
-		where: {
-			email: res.locals.email,
-		},
-	});
-	if (user.paymentStatus === "PENDING") {
+	const user = await getUserByEmail(res.locals.email);
+	if (user && user.paymentStatus === "PENDING") {
 		return res.status(200).json({
 			message: "Incomplete Profile",
 			user: await getUserByEmail(res.locals.email),
@@ -152,7 +148,7 @@ const handleRedirect = async (req, res) => {
 		res.cookie("accessToken", accessToken, {
 			expires: new Date(Date.now() + 3600000 * 24),
 			domain: "rbclub-server.onrender.com",
-			path: "/",
+			path: "/api",
 			httpOnly: true,
 			sameSite: "None",
 			secure: true,
@@ -227,6 +223,8 @@ const logout = (req, res) => {
 	res.clearCookie("accessToken", {
 		expires: new Date(Date.now() + 3600000),
 		httpOnly: true,
+		domain: "rbclub-server.onrender.com",
+		path: "/api",
 		sameSite: "None",
 		secure: true,
 	});
