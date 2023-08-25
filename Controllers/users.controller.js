@@ -1,6 +1,7 @@
 const prisma = require("../utils/db");
 const asyncWrapper = require("../utils/asyncWrapper");
 const { roles, accesses, courses, skills } = require("@prisma/client");
+const { sendMail } = require("../utils/sendOTP");
 
 const verifyAccessToResorce = async (req, res, next) => {
 	const isAllowed = await asyncWrapper(req, res, async (req, res) => {
@@ -23,12 +24,10 @@ const verifyAccessToResorce = async (req, res, next) => {
 
 const getRolesAndPermissions = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
-		return res
-			.status(200)
-			.json({
-				message: "success",
-				data: { roles, permissions: accesses },
-			});
+		return res.status(200).json({
+			message: "success",
+			data: { roles, permissions: accesses },
+		});
 	});
 };
 
@@ -115,6 +114,13 @@ const verifyPayment = async (req, res) => {
 				paymentStatus: "RECEIVED",
 			},
 		});
+		const user = await prisma.users.findUnique({
+			where: {
+				userID: userToVerify,
+			},
+			select: { email: true },
+		});
+		await sendMail(user.email) 
 		return res
 			.status(200)
 			.json({ message: "success", data: await getAllUsers() });

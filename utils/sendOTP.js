@@ -28,10 +28,10 @@ async function sendMail(email) {
 
 		//Generate message
 		const message = {
-			from: 'Robotics Club Nitte',
+			from: 'Robotics Club',
 			to: email,
-			subject: 'One Time Password to login',
-			text: `Use ${otp} as one time password to verify your account.`,
+			subject: 'Payment Verified',
+			text: `Payment verified!`
 		};
 
 		await transporter.sendMail(message);
