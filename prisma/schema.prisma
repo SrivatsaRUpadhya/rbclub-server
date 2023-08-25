@@ -118,6 +118,7 @@ enum roles {
 }
 
 enum accesses {
+  SUPERVISOR
   ADMIN
   INVENTORY
   EVENTS

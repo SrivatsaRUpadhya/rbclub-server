@@ -120,7 +120,7 @@ const verifyPayment = async (req, res) => {
 			},
 			select: { email: true },
 		});
-		await sendMail(user.email) 
+		await sendMail(user.email);
 		return res
 			.status(200)
 			.json({ message: "success", data: await getAllUsers() });

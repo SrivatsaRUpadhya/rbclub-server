@@ -4,14 +4,12 @@ const {
 	accessTokenSecret,
 	refreshTokenSecret,
 	clientURL_2,
-	clientURL_1,
 	serverURL,
 } = require("../utils/secrets");
 const { checkPassword, hashPassword } = require("../utils/passwords");
 const prisma = require("../utils/db");
 const asyncWrapper = require("../utils/asyncWrapper");
 const generateUID = require("../utils/generateUID");
-const { google } = require("googleapis");
 
 const auth = async (req, res, next) => {
 	const { accessToken } = req.cookies;
@@ -127,6 +125,11 @@ const handleRedirect = async (req, res) => {
 		//Store tokens in  db
 		//	console.log(tokens)
 		const user = jwt.decode(tokens.id_token);
+		console.log(user);
+		if (!user.hd) {
+			return res
+				.status(200).redirect(`${clientURL_2}/register?error=Please use organization email only`);
+		}
 		const result = await prisma.users.findUnique({
 			where: {
 				email: user.email,
@@ -161,7 +164,7 @@ const handleRedirect = async (req, res) => {
 					email: user.email,
 					isVerified: user.email_verified,
 					profileImg: user.picture,
-					name: user.name,
+					name: user.family_name,
 					IDCardNum: prevUser.IDCardNum
 						? generateUID(prevUser)
 						: "RCN" + new Date().getFullYear() + "0A01",

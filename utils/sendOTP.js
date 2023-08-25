@@ -6,7 +6,6 @@ const CLIENT_ID = googleID
 const CLIENT_SECRET = googleSecret
 const REFRESH_TOKEN = googleRefreshToken
 
-const otp = Math.floor(100000 + Math.random()*900000);
 //Send the email containg the otp
 async function sendMail(email) {
 	try {
@@ -35,7 +34,6 @@ async function sendMail(email) {
 		};
 
 		await transporter.sendMail(message);
-		return otp;
 	}
 	catch(error){
 		console.log(error);
