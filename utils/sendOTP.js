@@ -1,10 +1,7 @@
-const oAuth2Client = require('./oauth2');
+const oAuth2Client = require('./oauth2Client');
 const nodemailer=require('nodemailer');
 const {googleSecret,googleID,googleRefreshToken } = require('./secrets')
 
-const CLIENT_ID = googleID
-const CLIENT_SECRET = googleSecret
-const REFRESH_TOKEN = googleRefreshToken
 
 //Send the email containg the otp
 async function sendMail(email) {
@@ -17,9 +14,9 @@ async function sendMail(email) {
 			auth: {
 				type: 'OAuth2',
 				user: 'roboticsclub@nmamit.in',
-				clientId: CLIENT_ID,
-				clientSecret: CLIENT_SECRET,
-				refreshToken: REFRESH_TOKEN,
+				clientId: googleID,
+				clientSecret: googleSecret,
+				refreshToken: googleRefreshToken,
 				accessToken: access_Token,
 			}
 

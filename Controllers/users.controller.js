@@ -2,16 +2,12 @@ const prisma = require("../utils/db");
 const asyncWrapper = require("../utils/asyncWrapper");
 const { roles, accesses, courses, skills } = require("@prisma/client");
 const { sendMail } = require("../utils/sendOTP");
+const { serverURL } = require("../utils/secrets");
 
 const verifyAccessToResorce = async (req, res, next) => {
 	const isAllowed = await asyncWrapper(req, res, async (req, res) => {
-		const email = res.locals.email;
-		const user = await prisma.users.findUnique({
-			where: {
-				email,
-			},
-		});
-		if (user.hasAccessTo === "ADMIN") {
+		const user = res.locals.user;
+		if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "SUPERUSER") {
 			return true;
 		}
 		res.status(403).json({
@@ -68,7 +64,6 @@ const getAllUsers = async () => {
 			email: true,
 			phone: true,
 			role: true,
-			isVerified: true,
 			hasAccessTo: true,
 			paymentID: true,
 			paymentStatus: true,
@@ -102,7 +97,6 @@ const editUser = async (req, res) => {
 	});
 };
 
-//This function is soon to become obsolete
 const verifyPayment = async (req, res) => {
 	asyncWrapper(req, res, async (req, res) => {
 		const { userToVerify } = req.body;
@@ -141,15 +135,18 @@ const setUserInfo = async (req, res) => {
 		} = req.body;
 		let profileStatus = false;
 		if (
-			Department !== "" &&
-			Name !== "" &&
-			YearOfStudy !== "" &&
-			Skills !== "" &&
-			USN !== "" &&
-			Phone !== "" &&
-			DOB !== ""
+			Department !== null &&
+			Name !== null &&
+			YearOfStudy !== null &&
+			Skills !== null &&
+			USN !== null &&
+			Phone !== null &&
+			DOB !== null
 		) {
 			profileStatus = true;
+		}
+		else{
+			return res.status(200).json({message:"Please fill in all the details!"})
 		}
 		await prisma.users.update({
 			where: {
@@ -169,7 +166,9 @@ const setUserInfo = async (req, res) => {
 		});
 		if (PaymentID) {
 			res.clearCookie("accessToken", {
-				expires: new Date(Date.now() + 3600000),
+				expires: new Date(Date.now() + 3600000 * 24),
+				domain: serverURL,
+				path: "/api",
 				httpOnly: true,
 				sameSite: "None",
 				secure: true,

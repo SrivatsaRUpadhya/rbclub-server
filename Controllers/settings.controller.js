@@ -1,17 +1,9 @@
 const asyncWrapper = require("../utils/asyncWrapper");
+const prisma = require("../utils/db");
 const updateSettings = async (req, res) => {
-	const prisma = require("../utils/db");
 	await asyncWrapper(req, res, async (req, res) => {
-		const user = await prisma.users.findUnique({
-			where: {
-				email: res.locals.email,
-			},
-			select: {
-				name: true,
-				hasAccessTo: true,
-			},
-		});
-		if (user.hasAccessTo === "SUPERVISOR") {
+		const user = res.locals.user;
+		if (user.hasAccessTo === "SUPERUSER") {
 			const { SkipOtp, EventLimit, MaintenanceMode } = req.body;
 			await prisma.settings.upsert({
 				where: {
@@ -42,16 +34,16 @@ const updateSettings = async (req, res) => {
 			});
 			return res.status(200).json({ message: "success" });
 		}
-		return res.status(403).json({ message: "Unauthorized request!" });
+		return res.status(401).json({ message: "Not Authorized!" });
 	});
 };
 const getSettings = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
-		if (res.locals.user.hasAccessTo === "SUPERVISOR") {
-			const settitngs = await prisma.settings.findFirst();
-			return res.status(200).json({ message: "success", settitngs });
+		if (res.locals.user.hasAccessTo === "SUPERUSER") {
+			const settings = await prisma.settings.findFirst();
+			return res.status(200).json({ message: "success", settings });
 		}
-		return res.status(200).json({ message: "Not Authorized!" });
+		return res.status(401).json({ message: "Not Authorized!" });
 	});
 };
-module.exports = { updateSettings,getSettings };
+module.exports = { updateSettings, getSettings };

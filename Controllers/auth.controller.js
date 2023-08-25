@@ -101,7 +101,6 @@ const userStatus = async (req, res, next) => {
 };
 const register = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
-		//Wrap this inside an async wrapper
 		const authUrl = oauth2Client.generateAuthUrl({
 			access_type: "offline",
 			scope: [
@@ -118,17 +117,16 @@ const register = async (req, res) => {
 
 const handleRedirect = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
-		//	console.log(req.query?.code || res.query?.error);
 		const { tokens } = req.query.code
 			? await oauth2Client.getToken(req.query.code)
 			: undefined;
-		//Store tokens in  db
-		//	console.log(tokens)
 		const user = jwt.decode(tokens.id_token);
-		console.log(user);
 		if (!user.hd) {
 			return res
-				.status(200).redirect(`${clientURL_2}/register?error=Please use organization email only`);
+				.status(200)
+				.redirect(
+					`${clientURL_2}/register?error=Please use organization email only`
+				);
 		}
 		const result = await prisma.users.findUnique({
 			where: {
@@ -165,7 +163,7 @@ const handleRedirect = async (req, res) => {
 					isVerified: user.email_verified,
 					profileImg: user.picture,
 					name: user.family_name,
-					IDCardNum: prevUser.IDCardNum
+					IDCardNum: prevUser?.IDCardNum
 						? generateUID(prevUser)
 						: "RCN" + new Date().getFullYear() + "0A01",
 					refreshToken: tokens.refresh_token,

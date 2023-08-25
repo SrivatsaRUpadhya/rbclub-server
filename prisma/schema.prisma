@@ -92,7 +92,7 @@ model Events {
 
 model Settings{
 	id Int @id @default(autoincrement())
-	maintanenceMode Boolean @default(false)
+	maintenanceMode Boolean @default(false)
 	eventLimitPerUser Int @default(-1)
 	skipOtpOnRegister Boolean @default(false)
 	lastUpdatedBy String? 
@@ -118,7 +118,7 @@ enum roles {
 }
 
 enum accesses {
-  SUPERVISOR
+  SUPERUSER
   ADMIN
   INVENTORY
   EVENTS

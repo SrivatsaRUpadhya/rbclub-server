@@ -1,6 +1,4 @@
 const {
-	oauthClientID,
-	oauthClientSecret,
 	oauthRedirectURL,
 	googleRefreshToken,
 	googleID,

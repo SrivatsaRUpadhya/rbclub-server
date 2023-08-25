@@ -12,14 +12,24 @@ const eventsRouter = require("./Routes/events.router");
 const usersRouter = require("./Routes/users.router");
 const settingsRouter = require("./Routes/settings.router");
 const driveRouter = require("./Routes/drive.router");
-const handleTokens = require("./utils/tokens");
-const { handleRedirect } = require("./Controllers/auth.controller");
+const {
+	handleRedirect,
+	auth,
+	userStatus,
+} = require("./Controllers/auth.controller");
+const websiteStatus = require("./utils/websiteStatus");
 
-var whitelist = [
-	clientURL_1,
-	clientURL_2,
-	"http://localhost:3000",
-];
+var whitelist = [clientURL_1, clientURL_2, "http://localhost:3000"];
+
+//Do not delete the following commented lines, keep this to know what headers are to be set
+
+//app.use((req, res, next) => {
+//    res.set('Access-Control-Allow-Origin', clientURL);
+//    res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+//    res.set('Access-Control-Allow-Headers', 'Content-Type');
+//    res.set('Access-Control-Allow-Credentials', true);
+//    next();
+//})
 
 var corsOptions = {
 	origin: function (origin, callback) {
@@ -34,23 +44,14 @@ var corsOptions = {
 	exposedHeaders: ["set-cookie"],
 };
 
-app.options("*", cors(corsOptions));
-app.get("/", (req, res) => res.send("Live"));
+app.get("/", (req, res) => res.end("Live"));
 app.get("/api/auth/redirect", handleRedirect);
 
+app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
-
-//Do not delete the following commented lines, keep this to know what headers are to be set
-
-//app.use((req, res, next) => {
-//    res.set('Access-Control-Allow-Origin', clientURL);
-//    res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-//    res.set('Access-Control-Allow-Headers', 'Content-Type');
-//    res.set('Access-Control-Allow-Credentials', true);
-//    next();
-//})
 app.use(express.json());
 app.use(cookie());
+app.use(auth, userStatus, websiteStatus);
 app.use(authRouter);
 app.use(inventoryRouter);
 app.use(expensesRouter);
