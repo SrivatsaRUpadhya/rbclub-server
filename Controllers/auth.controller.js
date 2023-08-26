@@ -71,37 +71,45 @@ const auth = async (req, res, next) => {
 };
 
 const userStatus = async (req, res, next) => {
-	const user = await getUserByEmail(res.locals.email);
-	const settings = await prisma.settings.findFirst();
-	if (settings.maintenanceMode && user?.hasAccessTo !== "SUPERUSER") {
-		return res.status(200).json({ message: "Registrations will begin soon. Stay tuned!" });
+	try {
+		const user = await getUserByEmail(res.locals.email);
+		const settings = await prisma.settings.findFirst();
+		if (settings.maintenanceMode && user?.hasAccessTo !== "SUPERUSER") {
+			return res
+				.status(200)
+				.json({
+					message: "Registrations will begin soon. Stay tuned!",
+				});
+		}
+		if (user && user.paymentStatus === "PENDING") {
+			await getUserByEmail(res.locals.email);
+			return res.status(200).json({
+				message: "Incomplete Profile",
+				user: {
+					Name: user.name,
+					ProfileImg: user.profileImg,
+					Role: user.role,
+					Email: user.email,
+					Usn: user.usn,
+					Permissions: user.hasAccessTo,
+					Events: user.Events,
+					ID: user.IDCardNum,
+					Skills: user.skills,
+					Phone: user.phone,
+					Department: user.course,
+					isProfileComplete: user.isProfileComplete,
+					DOB: user.dob,
+					YearOfStudy: user.yearOfStudy,
+					PaymentID: user.paymentID,
+					PaymentStatus: user.paymentStatus,
+				},
+			});
+		}
+		res.locals.user = user;
+		return next();
+	} catch (error) {
+		return res.status(200).json({ message: "An error occurred!" });
 	}
-	if (user && user.paymentStatus === "PENDING") {
-		await getUserByEmail(res.locals.email);
-		return res.status(200).json({
-			message: "Incomplete Profile",
-			user: {
-				Name: user.name,
-				ProfileImg: user.profileImg,
-				Role: user.role,
-				Email: user.email,
-				Usn: user.usn,
-				Permissions: user.hasAccessTo,
-				Events: user.Events,
-				ID: user.IDCardNum,
-				Skills: user.skills,
-				Phone: user.phone,
-				Department: user.course,
-				isProfileComplete: user.isProfileComplete,
-				DOB: user.dob,
-				YearOfStudy: user.yearOfStudy,
-				PaymentID: user.paymentID,
-				PaymentStatus: user.paymentStatus,
-			},
-		});
-	}
-	res.locals.user = user;
-	return next();
 };
 const register = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
@@ -197,6 +205,7 @@ const getUserByEmail = async (email) => {
 		},
 		select: {
 			name: true,
+			userID:true,
 			profileImg: true,
 			role: true,
 			dob: true,

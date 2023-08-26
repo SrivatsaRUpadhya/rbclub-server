@@ -3,7 +3,8 @@ const asyncWrapper = require("../utils/asyncWrapper");
 const { roles, accesses, courses, skills } = require("@prisma/client");
 const { sendMail } = require("../utils/sendOTP");
 const { serverURL } = require("../utils/secrets");
-
+const fs = require("fs");
+const os = require("os");
 const verifyAccessToResorce = async (req, res, next) => {
 	const isAllowed = await asyncWrapper(req, res, async (req, res) => {
 		const user = res.locals.user;
@@ -59,11 +60,13 @@ const getAllUsers = async () => {
 		select: {
 			id: false,
 			userID: true,
+			IDCardNum: true,
 			name: true,
 			usn: true,
 			email: true,
 			phone: true,
 			role: true,
+			createdAt: true,
 			hasAccessTo: true,
 			paymentID: true,
 			paymentStatus: true,
@@ -144,9 +147,10 @@ const setUserInfo = async (req, res) => {
 			DOB !== null
 		) {
 			profileStatus = true;
-		}
-		else{
-			return res.status(200).json({message:"Please fill in all the details!"})
+		} else {
+			return res
+				.status(200)
+				.json({ message: "Please fill in all the details!" });
 		}
 		await prisma.users.update({
 			where: {
@@ -177,6 +181,47 @@ const setUserInfo = async (req, res) => {
 		res.status(200).json({ message: "success" });
 	});
 };
+
+const downloadUsersList = async (req, res) => {
+	await asyncWrapper(req, res, async (req, res) => {
+		if (
+			res.locals.user.hasAccessTo === "ADMIN" ||
+			res.locals.user.hasAccessTo === "SUPERUSER"
+		) {
+			try {
+				await fs.promises.appendFile(
+					"list.csv",
+					`Name,RCNID,USN,Email,Phone,RegisteredOn,PaymentID,PaymentStatus`
+				);
+
+				const users = await getAllUsers();
+				await Promise.all(
+					users.map(async (element) => {
+						try {
+							await fs.promises.appendFile(
+								"list.csv",
+								`${os.EOL}${element.name},${element.IDCardNum},${element.usn},${element.email},${element.phone},${element.createdAt},${element.paymentID},${element.paymentStatus}`
+							);
+						} catch (error) {
+							throw error;
+						}
+					})
+				);
+				res.download("list.csv", (err) => {
+					if (err) {
+						console.log(err);
+					}
+				});
+				await fs.promises.rm("list.csv");
+			} catch (error) {
+				console.log(error);
+				return res.status(200).json({ message: "An error occurred!" });
+			}
+		} else {
+			return res.status(403).json({ message: "Not Authorized!" });
+		}
+	});
+};
 module.exports = {
 	editUser,
 	verifyPayment,
@@ -187,4 +232,5 @@ module.exports = {
 	getDeptList,
 	getSkillsList,
 	getSkillsAndEvents,
+	downloadUsersList,
 };

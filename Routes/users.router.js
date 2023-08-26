@@ -10,6 +10,7 @@ const {
 	getDeptList,
 	getSkillsList,
 	getSkillsAndEvents,
+	downloadUsersList,
 } = require("../Controllers/users.controller");
 
 router.post(
@@ -43,5 +44,6 @@ router.post(
 router.post("/api/users/setUserInfo", auth, setUserInfo);
 router.post("/api/users/getDeptList", auth, getDeptList);
 router.post("/api/users/getSkillsAndEvents", auth, getSkillsAndEvents);
+router.get("/api/users/downloadUsersList", auth, userStatus, downloadUsersList);
 
 module.exports = router;
