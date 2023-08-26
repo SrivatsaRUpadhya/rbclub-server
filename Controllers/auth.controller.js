@@ -72,6 +72,10 @@ const auth = async (req, res, next) => {
 
 const userStatus = async (req, res, next) => {
 	const user = await getUserByEmail(res.locals.email);
+	const settings = await prisma.settings.findFirst();
+	if (settings.maintenanceMode && user?.hasAccessTo !== "SUPERUSER") {
+		return res.status(200).json({ message: "Registrations will begin soon. Stay tuned!" });
+	}
 	if (user && user.paymentStatus === "PENDING") {
 		await getUserByEmail(res.locals.email);
 		return res.status(200).json({

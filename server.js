@@ -17,7 +17,6 @@ const {
 	auth,
 	userStatus,
 } = require("./Controllers/auth.controller");
-const websiteStatus = require("./utils/websiteStatus");
 
 var whitelist = [clientURL_1, clientURL_2, "http://localhost:3000"];
 
@@ -52,7 +51,6 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookie());
 app.use(authRouter);
-app.use(auth, userStatus, websiteStatus);
 app.use(inventoryRouter);
 app.use(expensesRouter);
 app.use(eventsRouter);
