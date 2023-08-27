@@ -176,7 +176,7 @@ const handleRedirect = async (req, res) => {
 					email: user.email,
 					isVerified: user.email_verified,
 					profileImg: user.picture,
-					name: user.name,
+					name: user.family_name,
 					IDCardNum: prevUser.IDCardNum
 						? generateUID(prevUser)
 						: "RCN" + new Date().getFullYear() + "0A01",
