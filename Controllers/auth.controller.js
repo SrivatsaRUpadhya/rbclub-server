@@ -20,6 +20,7 @@ const auth = async (req, res, next) => {
 		jwt.verify(accessToken, accessTokenSecret);
 		res.locals.email = await jwt.decode(accessToken, accessTokenSecret)
 			.data;
+		const settings = await prisma.settings.findFirst();
 		next();
 	} catch (error) {
 		if (error.name === "TokenExpiredError") {
@@ -161,7 +162,7 @@ const handleRedirect = async (req, res) => {
 				IDCardNum: prevUser?.IDCardNum
 					? generateUID(prevUser)
 					: "RCN" + new Date().getFullYear() + "0A01",
-				refreshToken: tokens?.refresh_token,
+				refreshToken: tokens?.refresh_token ? tokens.refresh_token : undefined,
 			},
 			update: {
 				email: user.email,
@@ -171,6 +172,7 @@ const handleRedirect = async (req, res) => {
 				IDCardNum: prevUser?.IDCardNum
 					? generateUID(prevUser)
 					: "RCN" + new Date().getFullYear() + "0A01",
+				refreshToken: tokens?.refresh_token ? tokens.refresh_token : undefined,
 			},
 		});
 

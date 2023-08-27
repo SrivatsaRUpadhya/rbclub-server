@@ -21,7 +21,6 @@ const updateSettings = async (req, res) => {
 				},
 				create: {
 					lastUpdatedBy: user.name,
-					skipOtpOnRegister: SkipOtp,
 					eventLimitPerUser:
 						EventLimit === "No Limit"
 							? -1
