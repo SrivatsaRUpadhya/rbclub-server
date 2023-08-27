@@ -132,8 +132,16 @@ const handleRedirect = async (req, res) => {
 			? await oauth2Client.getToken(req.query.code)
 			: undefined;
 		//Store tokens in  db
+
 		//	console.log(tokens)
 		const user = jwt.decode(tokens.id_token);
+		if (!user.hd) {
+			return res
+				.status(200)
+				.redirect(
+					`${clientURL_2}/register?error=Please use organization email only`
+				);
+		}
 		const result = await prisma.users.findUnique({
 			where: {
 				email: user.email,
