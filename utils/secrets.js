@@ -14,6 +14,7 @@ const secrets = {
 	oauthClientID: process.env.OAUTH_CLIENT_ID,
 	oauthClientSecret: process.env.OAUTH_CLIENT_SECRET,
 	oauthRedirectURL: process.env.OAUTH_REDIRECT_URL,
+	googleAccessToken: process.env.GOOGLE_ACCESS_TOKEN
 };
 
 module.exports = secrets;

@@ -4,14 +4,13 @@ const updateSettings = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
 		const user = res.locals.user;
 		if (user.hasAccessTo === "SUPERUSER") {
-			const { SkipOtp, EventLimit, MaintenanceMode } = req.body;
+			const {EventLimit, MaintenanceMode } = req.body;
 			await prisma.settings.upsert({
 				where: {
 					id: 1,
 				},
 				update: {
 					lastUpdatedBy: user.name,
-					skipOtpOnRegister: SkipOtp,
 					eventLimitPerUser:
 						EventLimit === "No Limit"
 							? -1

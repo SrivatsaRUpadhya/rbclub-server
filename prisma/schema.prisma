@@ -136,6 +136,8 @@ enum expense_catagories {
 }
 
 enum inventory_catagories {
+WARBOT
+STATIONARY
 BOT_BUILDING_WORKSHOP
 INTERNET_OF_THINGS
 MODELLING

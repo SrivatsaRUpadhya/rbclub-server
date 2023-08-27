@@ -80,7 +80,6 @@ const userStatus = async (req, res, next) => {
 			});
 		}
 		if (user && user.paymentStatus === "PENDING") {
-			await getUserByEmail(res.locals.email);
 			return res.status(200).json({
 				message: "Incomplete Profile",
 				user: {
@@ -137,7 +136,14 @@ const handleRedirect = async (req, res) => {
 
 		//Verify token and extract payload
 		const user = tokenResult.getPayload();
-	
+		if (!user.hd) {
+			return res
+				.status(200)
+				.redirect(
+					`${clientURL_2}/register?error=Please use organization email only`
+				);
+		}
+
 		//Register or login the user
 		const allUsers = await prisma.users.findMany();
 		const prevUser =
@@ -169,13 +175,9 @@ const handleRedirect = async (req, res) => {
 		});
 
 		//Generate and send accessToken
-		const accessToken = jwt.sign(
-			{ data: user.email },
-			accessTokenSecret,
-			{
-				expiresIn: "24h",
-			}
-		);
+		const accessToken = jwt.sign({ data: user.email }, accessTokenSecret, {
+			expiresIn: "24h",
+		});
 
 		res.cookie("accessToken", accessToken, {
 			expires: new Date(Date.now() + 3600000 * 24),
