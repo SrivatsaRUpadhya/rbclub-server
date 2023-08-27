@@ -1,9 +1,17 @@
-require("dotenv").config();
-
+import * as dotenv from "dotenv";
+dotenv.config();
+import * as jwt from "jsonwebtoken";
+import { z } from "zod";
 const secrets = {
 	port: process.env.PORT,
-	accessTokenSecret: process.env.ACCESS_TOKEN_SECRET,
-	refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,
+	accessTokenSecret: jwt.sign(
+		z.string().parse(process.env.ACCESS_TOKEN_SECRET),
+		z.string().parse(process.env.JWT_SECRET)
+	),
+	refreshTokenSecret: jwt.sign(
+		z.string().parse(process.env.REFRESH_TOKEN_SECRET),
+		z.string().parse(process.env.JWT_SECRET)
+	),
 	clientURL_1: process.env.CLIENT_URL_1,
 	clientURL_2: process.env.CLIENT_URL_2,
 	serverURL: process.env.SERVER_URL,
@@ -16,4 +24,4 @@ const secrets = {
 	oauthRedirectURL: process.env.OAUTH_REDIRECT_URL,
 };
 
-module.exports = secrets;
+export default secrets;

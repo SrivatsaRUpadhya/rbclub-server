@@ -1,6 +1,6 @@
-const prisma = require("../utils/db");
-const asyncWrapper = require("../utils/asyncWrapper");
-const { checkPassword } = require("../utils/passwords");
+import prisma from "../utils/db"
+import asyncWrapper from "../utils/asyncWrapper";
+import { checkPassword } from "../utils/passwords";
 const { inventory_catagories } = require("@prisma/client");
 const verifyAccessToInventory = async (req, res, next) => {
 	const isAllowed = asyncWrapper(req, res, async (req, res, next) => {

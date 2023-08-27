@@ -1,6 +1,6 @@
 const router = require('express').Router();
-const { auth, userStatus } = require("../Controllers/auth.controller");
-const { addEvent, getEvents, verifyAccessToEvents, editEvent, registerForEvent, deleteEvent, verifyAccess } = require('../Controllers/events.controller');
+const { auth, userStatus } = require("../Controllers/auth.controller.ts");
+const { addEvent, getEvents, verifyAccessToEvents, editEvent, registerForEvent, deleteEvent, verifyAccess } = require('../Controllers/events.controller.ts');
 router.post("/api/events/addEvents", auth,userStatus, verifyAccessToEvents, addEvent);
 router.post("/api/events/getAllEvents", auth,userStatus, getEvents);
 router.post("/api/events/editEventById", auth, userStatus,verifyAccessToEvents, editEvent);

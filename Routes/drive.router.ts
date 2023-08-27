@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { getFilesList } = require('../Controllers/drive.controller');
+const { getFilesList } = require('../Controllers/drive.controller.ts');
 
 
 router.post("/api/drive/listFiles", getFilesList);
