@@ -12,6 +12,7 @@ const eventsRouter = require("./Routes/events.router");
 const usersRouter = require("./Routes/users.router");
 const settingsRouter = require("./Routes/settings.router");
 const driveRouter = require("./Routes/drive.router");
+const attendanceRouter = require("./Routes/attendance.router");
 const {
 	handleRedirect,
 	auth,
@@ -57,6 +58,7 @@ app.use(eventsRouter);
 app.use(usersRouter);
 app.use(settingsRouter);
 app.use(driveRouter);
+app.use(attendanceRouter);
 
 app.listen(process.env.PORT, () => {
 	console.log(`Server live on port: ${process.env.PORT}`);

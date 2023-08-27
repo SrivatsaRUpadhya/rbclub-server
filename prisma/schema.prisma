@@ -28,6 +28,7 @@ model Users {
   eventID      String?
   expenses     Expenses[]
   isVerified   Boolean     @default(false)
+  attendance   Int			@default(0)
   paymentID String?
   paymentStatus paymentStatus @default(PENDING)
   isProfileComplete   Boolean     @default(false)
