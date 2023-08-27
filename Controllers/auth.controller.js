@@ -127,56 +127,56 @@ const register = async (req, res) => {
 
 const handleRedirect = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
-		//Get tokens from AuthCode
-		const authCode = req.query.code;
-		const { tokens } = await oauth2Client.getToken(authCode);
-		const tokenResult = await oauth2Client.verifyIdToken({
-			idToken: tokens?.id_token,
-			maxExpiry: tokens?.expiry_date,
-		});
-
-		//Verify token and extract payload
-		const user = tokenResult.getPayload();
-		if (!user.hd) {
-			return res
-				.status(200)
-				.redirect(
-					`${clientURL_2}/register?error=Please use organization email only`
-				);
-		}
-
-		//Register or login the user
-		const allUsers = await prisma.users.findMany();
-		const prevUser =
-			allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
-
-		await prisma.users.upsert({
+		//	console.log(req.query?.code || res.query?.error);
+		const { tokens } = req.query.code
+			? await oauth2Client.getToken(req.query.code)
+			: undefined;
+		//Store tokens in  db
+		//	console.log(tokens)
+		const user = jwt.decode(tokens.id_token);
+		const result = await prisma.users.findUnique({
 			where: {
 				email: user.email,
 			},
-			create: {
-				email: user.email,
-				isVerified: user.email_verified,
-				profileImg: user.picture,
-				name: user.family_name,
-				IDCardNum: prevUser?.IDCardNum
-					? generateUID(prevUser)
-					: "RCN" + new Date().getFullYear() + "0A01",
-				refreshToken: tokens?.refresh_token ? tokens.refresh_token : undefined,
-			},
-			update: {
-				email: user.email,
-				isVerified: user.email_verified,
-				profileImg: user.picture,
-				name: user.family_name,
-				IDCardNum: prevUser?.IDCardNum
-					? generateUID(prevUser)
-					: "RCN" + new Date().getFullYear() + "0A01",
-				refreshToken: tokens?.refresh_token ? tokens.refresh_token : undefined,
+			select: {
+				id: false,
+				name: true,
+				usn: true,
+				email: true,
+				phone: true,
+				dob: true,
+				skills: true,
+				isVerified: true,
+				isProfileComplete: true,
+				paymentStatus: true,
+				yearOfStudy: true,
+				course: true,
+				Events: {
+					select: {
+						eventID: true,
+					},
+				},
 			},
 		});
+		if (!result) {
+			const allUsers = await prisma.users.findMany();
+			const prevUser =
+				allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
 
-		//Generate and send accessToken
+			await prisma.users.create({
+				data: {
+					email: user.email,
+					isVerified: user.email_verified,
+					profileImg: user.picture,
+					name: user.name,
+					IDCardNum: prevUser.IDCardNum
+						? generateUID(prevUser)
+						: "RCN" + new Date().getFullYear() + "0A01",
+					refreshToken: tokens.refresh_token,
+					//					access_token: tokens.access_token,
+				},
+			});
+		}
 		const accessToken = jwt.sign({ data: user.email }, accessTokenSecret, {
 			expiresIn: "24h",
 		});
@@ -186,11 +186,9 @@ const handleRedirect = async (req, res) => {
 			domain: serverURL,
 			path: "/api",
 			httpOnly: true,
-			sameSite: "none",
+			sameSite: "None",
 			secure: true,
 		});
-
-		//Redirect back to register page
 		return res.redirect(`${clientURL_2}/register`);
 	});
 };
