@@ -8,14 +8,25 @@ const updateAttendance = async (req, res) => {
 		if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "SUPERUSER") {
 			try {
 				const { AttendanceList } = req.body;
-				await prisma.users.updateMany({
-					where: {
-						userID: AttendanceList,
-					},
-					data: {
-						attendance: { increment: 1 },
-					},
-				});
+
+				const update = Promise.all(
+					AttendanceList.map(async (element) => {
+						try {
+							await prisma.users.updateMany({
+								where: {
+									userID: element,
+								},
+								data: {
+									attendance: { increment: 1 },
+								},
+							});
+						} catch (mapError) {
+							console.log(mapError);
+							throw mapError;
+						}
+					})
+				);
+				await update;
 				return res.status(200).json({ message: "success" });
 			} catch (error) {
 				console.log(error);
@@ -32,7 +43,9 @@ const getAttendanceList = async (req, res) => {
 		const user = res.locals.user;
 		if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "SUPERUSER") {
 			try {
-				const result = await prisma.users.findMany({select:{name:true,IDCardNum:true,attendance:true}});
+				const result = await prisma.users.findMany({
+					select: { name: true, IDCardNum: true, attendance: true },
+				});
 				return res
 					.status(200)
 					.json({ message: "success", data: result });
@@ -87,4 +100,8 @@ const dowonloadAttendanceList = async (req, res) => {
 	});
 };
 
-module.exports = { updateAttendance, getAttendanceList, dowonloadAttendanceList };
+module.exports = {
+	updateAttendance,
+	getAttendanceList,
+	dowonloadAttendanceList,
+};

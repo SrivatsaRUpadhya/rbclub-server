@@ -75,11 +75,9 @@ const userStatus = async (req, res, next) => {
 		const user = await getUserByEmail(res.locals.email);
 		const settings = await prisma.settings.findFirst();
 		if (settings.maintenanceMode && user?.hasAccessTo !== "SUPERUSER") {
-			return res
-				.status(200)
-				.json({
-					message: "Registrations will begin soon. Stay tuned!",
-				});
+			return res.status(200).json({
+				message: "Registrations will begin soon. Stay tuned!",
+			});
 		}
 		if (user && user.paymentStatus === "PENDING") {
 			await getUserByEmail(res.locals.email);
@@ -129,71 +127,66 @@ const register = async (req, res) => {
 
 const handleRedirect = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
-		const { tokens } = req.query.code
-			? await oauth2Client.getToken(req.query.code)
-			: undefined;
-		const user = jwt.decode(tokens.id_token);
-		if (!user.hd) {
-			return res
-				.status(200)
-				.redirect(
-					`${clientURL_2}/register?error=Please use organization email only`
-				);
-		}
-		const result = await prisma.users.findUnique({
+		//Get tokens from AuthCode
+		const authCode = req.query.code;
+		const { tokens } = await oauth2Client.getToken(authCode);
+		const tokenResult = await oauth2Client.verifyIdToken({
+			idToken: tokens?.id_token,
+			maxExpiry: tokens?.expiry_date,
+		});
+
+		//Verify token and extract payload
+		const user = tokenResult.getPayload();
+	
+		//Register or login the user
+		const allUsers = await prisma.users.findMany();
+		const prevUser =
+			allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
+
+		await prisma.users.upsert({
 			where: {
 				email: user.email,
 			},
-			select: {
-				id: false,
-				name: true,
-				usn: true,
-				email: true,
-				phone: true,
-				dob: true,
-				skills: true,
-				isVerified: true,
-				isProfileComplete: true,
-				paymentStatus: true,
-				yearOfStudy: true,
-				course: true,
-				Events: {
-					select: {
-						eventID: true,
-					},
-				},
+			create: {
+				email: user.email,
+				isVerified: user.email_verified,
+				profileImg: user.picture,
+				name: user.family_name,
+				IDCardNum: prevUser?.IDCardNum
+					? generateUID(prevUser)
+					: "RCN" + new Date().getFullYear() + "0A01",
+				refreshToken: tokens?.refresh_token,
+			},
+			update: {
+				email: user.email,
+				isVerified: user.email_verified,
+				profileImg: user.picture,
+				name: user.family_name,
+				IDCardNum: prevUser?.IDCardNum
+					? generateUID(prevUser)
+					: "RCN" + new Date().getFullYear() + "0A01",
 			},
 		});
-		if (!result) {
-			const allUsers = await prisma.users.findMany();
-			const prevUser =
-				allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
 
-			await prisma.users.create({
-				data: {
-					email: user.email,
-					isVerified: user.email_verified,
-					profileImg: user.picture,
-					name: user.family_name,
-					IDCardNum: prevUser?.IDCardNum
-						? generateUID(prevUser)
-						: "RCN" + new Date().getFullYear() + "0A01",
-					refreshToken: tokens.refresh_token,
-				},
-			});
-		}
-		const accessToken = jwt.sign({ data: user.email }, accessTokenSecret, {
-			expiresIn: "24h",
-		});
+		//Generate and send accessToken
+		const accessToken = jwt.sign(
+			{ data: user.email },
+			accessTokenSecret,
+			{
+				expiresIn: "24h",
+			}
+		);
 
 		res.cookie("accessToken", accessToken, {
 			expires: new Date(Date.now() + 3600000 * 24),
 			domain: serverURL,
 			path: "/api",
 			httpOnly: true,
-			sameSite: "None",
+			sameSite: "none",
 			secure: true,
 		});
+
+		//Redirect back to register page
 		return res.redirect(`${clientURL_2}/register`);
 	});
 };
@@ -205,7 +198,7 @@ const getUserByEmail = async (email) => {
 		},
 		select: {
 			name: true,
-			userID:true,
+			userID: true,
 			profileImg: true,
 			role: true,
 			dob: true,
@@ -246,7 +239,7 @@ const me = async (req, res) => {
 				Permissions: user.hasAccessTo,
 				Events: user.Events,
 				RcnID: user.IDCardNum,
-				UserID:user.userID,
+				UserID: user.userID,
 				Skills: user.skills,
 				Phone: user.phone,
 				Department: user.course,
@@ -276,26 +269,25 @@ const logout = (req, res) => {
 const deleteAccount = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
 		const email = res.locals.email;
-		const { Password } = req.body;
-		const user = await getUserByEmail(email);
-		if (await checkPassword(Password, user.password)) {
-			await prisma.users.delete({
-				where: {
-					email,
-				},
-			});
-			res.clearCookie("accessToken", {
-				expires: new Date(Date.now() + 3600000),
-				domain: serverURL,
-				path: "/api",
-				httpOnly: true,
-				sameSite: "None",
-				secure: true,
-			});
-			return res.status(200).json({ message: "success" });
-		} else {
-			return res.status(200).json({ message: "Incorrect password" });
-		}
+		const user = await prisma.users.findUnique({
+			where: { email },
+			select: { refreshToken: true },
+		});
+		await prisma.users.delete({
+			where: {
+				email,
+			},
+		});
+		await oauth2Client.revokeToken(user.refreshToken);
+		res.clearCookie("accessToken", {
+			expires: new Date(Date.now() + 3600000),
+			domain: serverURL,
+			path: "/api",
+			httpOnly: true,
+			sameSite: "None",
+			secure: true,
+		});
+		return res.status(200).json({ message: "success" });
 	});
 };
 module.exports = {
