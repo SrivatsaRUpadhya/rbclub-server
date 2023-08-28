@@ -6,6 +6,6 @@ router.post("/api/events/getAllEvents", auth,userStatus, getEvents);
 router.post("/api/events/editEventById", auth, userStatus,verifyAccessToEvents, editEvent);
 router.post("/api/events/deleteEventById", auth,userStatus, verifyAccessToEvents, deleteEvent);
 router.post("/api/events/register", auth,userStatus, registerForEvent);
-router.post("/api/events/verifyAccess", auth, verifyAccessToEvents, verifyAccess);
+router.post("/api/events/verifyAccess", auth,userStatus, verifyAccessToEvents, verifyAccess);
 
 module.exports = router; 
