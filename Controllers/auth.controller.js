@@ -134,7 +134,7 @@ const handleRedirect = async (req, res) => {
 
 		//	console.log(tokens)
 		const user = jwt.decode(tokens.id_token);
-		console.log({tokens,user})
+		console.log({ tokens, user });
 		if (!user.hd) {
 			return res
 				.status(200)
@@ -300,6 +300,25 @@ const deleteAccount = async (req, res) => {
 		return res.status(200).json({ message: "success" });
 	});
 };
+
+const deleteAccountByUserId = async (req, res) => {
+	await asyncWrapper(req, res, async (req, res) => {
+		const { userID } = req.body;
+		const user = await prisma.users.findUnique({
+			where: { userID },
+			select: { refreshToken: true },
+		});
+		await prisma.users.delete({
+			where: {
+				userID,
+			},
+		});
+		await oauth2Client.revokeToken(user.refreshToken);
+
+		return res.status(200).json({ message: "success" });
+	});
+};
+
 module.exports = {
 	register,
 	me,
@@ -309,4 +328,5 @@ module.exports = {
 	getUserByEmail,
 	handleRedirect,
 	userStatus,
+	deleteAccountByUserId,
 };
