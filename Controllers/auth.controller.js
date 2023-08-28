@@ -20,7 +20,6 @@ const auth = async (req, res, next) => {
 		jwt.verify(accessToken, accessTokenSecret);
 		res.locals.email = await jwt.decode(accessToken, accessTokenSecret)
 			.data;
-		const settings = await prisma.settings.findFirst();
 		next();
 	} catch (error) {
 		if (error.name === "TokenExpiredError") {
@@ -91,7 +90,8 @@ const userStatus = async (req, res, next) => {
 					Usn: user.usn,
 					Permissions: user.hasAccessTo,
 					Events: user.Events,
-					ID: user.IDCardNum,
+					RcnID: user.IDCardNum,
+					UserID: user.userID,
 					Skills: user.skills,
 					Phone: user.phone,
 					Department: user.course,
