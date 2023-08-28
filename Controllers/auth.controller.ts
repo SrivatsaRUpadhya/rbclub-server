@@ -4,10 +4,9 @@ import { Auth } from "googleapis";
 import { Request, Response, RequestHandler, NextFunction } from "express";
 import { z } from "zod";
 import secrets from "../utils/secrets";
-const { checkPassword, hashPassword } = require("../utils/passwords");
 import prisma from "../utils/db";
-const asyncWrapper = require("../utils/asyncWrapper");
-const generateUID = require("../utils/generateUID");
+import asyncWrapper from "../utils/asyncWrapper";
+import generateUID from "../utils/generateUID";
 
 const auth: RequestHandler = async (
 	req: Request,

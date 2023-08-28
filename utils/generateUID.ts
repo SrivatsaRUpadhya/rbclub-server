@@ -1,5 +1,7 @@
+import prisma from "./db";
+
 //Format- RCNYYYYVCNN
-function generateUID(prevUser){
+function generateUID(prevUser:typeof(prisma.users)):string{
 	const prevUID = prevUser.IDCardNum;
 	const year = new Date().getFullYear();
 	let UID = "RCN"+year;
@@ -23,4 +25,4 @@ function generateUID(prevUser){
 	return (UID.concat(newVerNum,newVerChar,newIDNum));
 }
 
-module.exports = generateUID;
+export generateUID;
