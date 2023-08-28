@@ -1,18 +1,26 @@
 const prisma = require("../utils/db");
 const asyncWrapper = require("../utils/asyncWrapper");
+const { getUserByEmail } = require("./auth.controller");
 
 const verifyAccessToEvents = async (req, res, next) => {
 	const isAllowed = await asyncWrapper(req, res, async (req, res) => {
-		const user = res.locals.user;
-		if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "EVENTS" || user.hasAccessTo === "SUPERUSER") {
-			return true;
+		const user = await getUserByEmail(res.locals.email);
+		if (
+			user.hasAccessTo === "ADMIN" ||
+			user.hasAccessTo === "EVENTS" ||
+			user.hasAccessTo === "SUPERUSER"
+		) {
+			return {status:true, user};
 		}
 		res.status(403).json({
 			message: "Oops! You don't have access to this",
 		});
 		return false;
 	});
-	isAllowed && next();
+	if (isAllowed.status === true) {
+		res.locals.user = isAllowed.user;
+		next();
+	}
 };
 
 const verifyAccess = async (req, res) => {
@@ -106,7 +114,7 @@ const registerForEvent = async (req, res) => {
 		if (!EventID) {
 			return res.status(200).json({ message: "Invalid Request!" });
 		}
-		const user = res.locals.user;
+		const email = res.locals.email;
 		const settings = await prisma.settings.findFirst();
 		if (settings.eventLimitPerUser !== -1) {
 			if (user.Events.length >= settings.eventLimitPerUser) {
@@ -115,7 +123,7 @@ const registerForEvent = async (req, res) => {
 		}
 		await prisma.users.update({
 			where: {
-				email:res.locals.email,
+				email: res.locals.email,
 			},
 			data: {
 				Events: {
@@ -128,7 +136,10 @@ const registerForEvent = async (req, res) => {
 				Events: true,
 			},
 		});
-
+		const user = await prisma.users.findUnique({
+			where: { email },
+			select: { userID: true },
+		});
 		await prisma.events.update({
 			where: {
 				eventID: EventID,
@@ -163,7 +174,11 @@ const deleteEvent = async (req, res) => {
 const getEvents = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
 		const user = res.locals.user;
-		if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "EVENTS" || user.hasAccessTo === "SUPERUSER") {
+		if (
+			user.hasAccessTo === "ADMIN" ||
+			user.hasAccessTo === "EVENTS" ||
+			user.hasAccessTo === "SUPERUSER"
+		) {
 			return res
 				.status(200)
 				.json({ message: "success", data: await fetchEvents("Admin") });
