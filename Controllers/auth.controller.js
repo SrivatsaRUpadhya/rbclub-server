@@ -128,13 +128,13 @@ const register = async (req, res) => {
 const handleRedirect = async (req, res) => {
 	await asyncWrapper(req, res, async (req, res) => {
 		//	console.log(req.query?.code || res.query?.error);
-		const { tokens } = req.query.code
-			? await oauth2Client.getToken(req.query.code)
-			: undefined;
+		const { tokens } = await oauth2Client.getToken(req.query?.code);
+
 		//Store tokens in  db
 
 		//	console.log(tokens)
 		const user = jwt.decode(tokens.id_token);
+		console.log({tokens,user})
 		if (!user.hd) {
 			return res
 				.status(200)
@@ -176,7 +176,7 @@ const handleRedirect = async (req, res) => {
 					email: user.email,
 					isVerified: user.email_verified,
 					profileImg: user.picture,
-					name: user.family_name,
+					name: user.family_name || user.given_name,
 					IDCardNum: prevUser.IDCardNum
 						? generateUID(prevUser)
 						: "RCN" + new Date().getFullYear() + "0A01",
