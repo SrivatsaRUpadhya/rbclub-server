@@ -10,7 +10,7 @@ const verifyAccessToEvents = async (req, res, next) => {
 			user.hasAccessTo === "EVENTS" ||
 			user.hasAccessTo === "SUPERUSER"
 		) {
-			return {status:true, user};
+			return { status: true, user };
 		}
 		res.status(403).json({
 			message: "Oops! You don't have access to this",
@@ -115,6 +115,10 @@ const registerForEvent = async (req, res) => {
 			return res.status(200).json({ message: "Invalid Request!" });
 		}
 		const email = res.locals.email;
+		const user = await prisma.users.findUnique({
+			where: { email },
+			select: { userID: true },
+		});
 		const settings = await prisma.settings.findFirst();
 		if (settings.eventLimitPerUser !== -1) {
 			if (user.Events.length >= settings.eventLimitPerUser) {
@@ -136,10 +140,7 @@ const registerForEvent = async (req, res) => {
 				Events: true,
 			},
 		});
-		const user = await prisma.users.findUnique({
-			where: { email },
-			select: { userID: true },
-		});
+
 		await prisma.events.update({
 			where: {
 				eventID: EventID,
