@@ -142,6 +142,13 @@ const handleRedirect = async (req, res) => {
 					`${clientURL_2}/register?error=Please use organization email only`
 				);
 		}
+		if (user.hd === "nmamit.in") {
+			return res
+				.status(200)
+				.redirect(
+					`${clientURL_2}/register?error=Oops! Looks like you are not allowed to access this!. If you think this is an error please contact us at roboticsclub@nmamit.in.`
+				);
+		}
 		const result = await prisma.users.findUnique({
 			where: {
 				email: user.email,
@@ -172,9 +179,9 @@ const handleRedirect = async (req, res) => {
 				allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
 			const splitNames = user?.name.split(" ");
 			const usn = splitNames[0];
-			var name = ""
-			for(var i = 1; i < splitNames.length; i++){
-				name += splitNames[i]+" ";
+			var name = "";
+			for (var i = 1; i < splitNames.length; i++) {
+				name += splitNames[i] + " ";
 			}
 
 			await prisma.users.create({
@@ -182,7 +189,7 @@ const handleRedirect = async (req, res) => {
 					email: user.email,
 					isVerified: user.email_verified,
 					profileImg: user.picture,
-					name:user.name,
+					name: user.name,
 					IDCardNum: prevUser.IDCardNum
 						? generateUID(prevUser)
 						: "RCN" + new Date().getFullYear() + "0A01",
