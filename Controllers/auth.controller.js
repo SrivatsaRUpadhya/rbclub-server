@@ -142,7 +142,7 @@ const handleRedirect = async (req, res) => {
 					`${clientURL_2}/register?error=Please use organization email only`
 				);
 		}
-		if (user.hd === "nmamit.in") {
+		if (user.hd !== "nmamit.in") {
 			return res
 				.status(200)
 				.redirect(
