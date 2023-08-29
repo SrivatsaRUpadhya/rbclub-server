@@ -32,7 +32,7 @@ model Users {
   paymentID String?
   paymentStatus paymentStatus @default(PENDING)
   isProfileComplete   Boolean     @default(false)
-  refreshToken String      @db.Text
+  refreshToken String?      @db.Text
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   yearOfStudy  Int?

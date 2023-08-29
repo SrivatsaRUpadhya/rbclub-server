@@ -170,13 +170,20 @@ const handleRedirect = async (req, res) => {
 			const allUsers = await prisma.users.findMany();
 			const prevUser =
 				allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
+			const splitNames = user?.name.split(" ");
+			const usn = splitNames[0];
+			var name = ""
+			for(var i = 1; i < splitNames.length; i++){
+				name += splitNames[i]+" ";
+			}
 
 			await prisma.users.create({
 				data: {
 					email: user.email,
 					isVerified: user.email_verified,
 					profileImg: user.picture,
-					name: user.family_name || user.given_name,
+					name,
+					usn,
 					IDCardNum: prevUser.IDCardNum
 						? generateUID(prevUser)
 						: "RCN" + new Date().getFullYear() + "0A01",
