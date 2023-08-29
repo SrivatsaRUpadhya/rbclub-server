@@ -1,25 +1,40 @@
-const prisma = require("../utils/db");
-const asyncWrapper = require("../utils/asyncWrapper");
-
-const verifyAccessToEvents = async (req, res, next) => {
-	const isAllowed = await asyncWrapper(req, res, async (req, res) => {
-		const user = res.locals.user;
-		if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "EVENTS" || user.hasAccessTo === "SUPERUSER") {
-			return true;
-		}
-		res.status(403).json({
-			message: "Oops! You don't have access to this",
-		});
-		return false;
-	});
-	isAllowed && next();
+import prisma from "../utils/db";
+import asyncWrapper from "../utils/asyncWrapper";
+import { Request, Response, NextFunction } from "express";
+import { z } from "zod";
+import { getUserByEmail } from "./auth.controller";
+import { Users } from "@prisma/client";
+import { userType } from "../utils/customTypes";
+const verifyAccessToEvents = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		async (req: Request, res: Response) => {
+			const user = await getUserByEmail(res.locals.email);
+			if (
+				user?.hasAccessTo === "ADMIN" ||
+				user?.hasAccessTo === "EVENTS" ||
+				user?.hasAccessTo === "SUPERUSER"
+			) {
+				res.locals.user = user;
+				next();
+			}
+			return res.status(403).json({
+				message: "Oops! You don't have access to this",
+			});
+		};
+	} catch (error) {
+		return res.status(500).json({ message: "An error occurred!" });
+	}
 };
 
-const verifyAccess = async (req, res) => {
+const verifyAccess = async (req: Request, res: Response) => {
 	return res.status(200).json({ message: "success" });
 };
 
-const fetchEvents = async (fetchType) => {
+const fetchEvents = async (fetchType?: "Admin") => {
 	return fetchType == "Admin"
 		? await prisma.events.findMany({
 				select: {
@@ -53,20 +68,28 @@ const fetchEvents = async (fetchType) => {
 		  });
 };
 
-const addEvent = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const addEvent = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const { List } = req.body;
-		List.map(async (element) => {
-			await prisma.events.create({
-				data: {
-					eventName: element.Name,
-					catagory: element.Catagory,
-					desc: element.Description,
-					eventDate: new Date(element.Date),
-					max_entries: parseInt(element.MaxEntries),
-				},
-			});
-		});
+		List.map(
+			async (element: {
+				Name: string;
+				Catagory: string;
+				Description: string;
+				Date: string;
+				MaxEntries: string;
+			}) => {
+				await prisma.events.create({
+					data: {
+						eventName: element.Name,
+						catagory: element.Catagory,
+						desc: element.Description,
+						eventDate: new Date(element.Date),
+						max_entries: parseInt(element.MaxEntries),
+					},
+				});
+			}
+		);
 		const inventoryItems = await fetchEvents();
 		return res
 			.status(200)
@@ -74,8 +97,8 @@ const addEvent = async (req, res) => {
 	});
 };
 
-const editEvent = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const editEvent = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const {
 			EventID,
 			EventName,
@@ -96,20 +119,24 @@ const editEvent = async (req, res) => {
 				max_entries: MaxEntries ? parseInt(MaxEntries) : undefined,
 			},
 		});
+		return res.status(200).json({ message: "success" });
 	});
-	return res.status(200).json({ message: "success" });
 };
 
-const registerForEvent = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const registerForEvent = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const { EventID } = req.body;
 		if (!EventID) {
 			return res.status(200).json({ message: "Invalid Request!" });
 		}
-		const user = res.locals.user;
+		const user: userType = res.locals.user;
+		const email = res.locals.email;
 		const settings = await prisma.settings.findFirst();
-		if (settings.eventLimitPerUser !== -1) {
-			if (user.Events.length >= settings.eventLimitPerUser) {
+		if (settings?.eventLimitPerUser !== -1) {
+			if (
+				z.number().parse(user?.Events.length) >=
+				z.number().parse(settings?.eventLimitPerUser)
+			) {
 				return res.status(200).json({ message: "Limit reached!" });
 			}
 		}
@@ -136,7 +163,7 @@ const registerForEvent = async (req, res) => {
 			data: {
 				users: {
 					connect: {
-						userID: user.userID,
+						userID: user?.userID,
 					},
 				},
 			},
@@ -148,22 +175,26 @@ const registerForEvent = async (req, res) => {
 	});
 };
 
-const deleteEvent = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const deleteEvent = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const { EventID } = req.body;
 		await prisma.events.delete({
 			where: {
 				eventID: EventID,
 			},
 		});
+		res.status(200).json({ message: "success" });
 	});
-	res.status(200).json({ message: "success" });
 };
 
-const getEvents = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
-		const user = res.locals.user;
-		if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "EVENTS" || user.hasAccessTo === "SUPERUSER") {
+const getEvents = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
+		const user: Users = res.locals.user;
+		if (
+			user?.hasAccessTo === "ADMIN" ||
+			user?.hasAccessTo === "EVENTS" ||
+			user?.hasAccessTo === "SUPERUSER"
+		) {
 			return res
 				.status(200)
 				.json({ message: "success", data: await fetchEvents("Admin") });
@@ -174,7 +205,7 @@ const getEvents = async (req, res) => {
 	});
 };
 
-module.exports = {
+export {
 	addEvent,
 	getEvents,
 	verifyAccessToEvents,

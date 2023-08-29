@@ -1,25 +1,36 @@
-const prisma = require("../utils/db");
-const asyncWrapper = require("../utils/asyncWrapper");
-const { roles, accesses, courses, skills } = require("@prisma/client");
-const { sendMail } = require("../utils/sendOTP");
-const { serverURL } = require("../utils/secrets");
+import secrets from "../utils/secrets";
+import prisma from "../utils/db";
+import asyncWrapper from "../utils/asyncWrapper";
+import { Request, Response, NextFunction } from "express";
+import { roles, accesses,skills,courses } from "@prisma/client";
 
-const verifyAccessToResorce = async (req, res, next) => {
-	const isAllowed = await asyncWrapper(req, res, async (req, res) => {
-		const user = res.locals.user;
-		if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "SUPERUSER") {
-			return true;
+const verifyAccessToResorce = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	const isAllowed = await asyncWrapper(
+		req,
+		res,
+		async (req: Request, res: Response) => {
+			const user = res.locals.user;
+			if (
+				user.hasAccessTo === "ADMIN" ||
+				user.hasAccessTo === "SUPERUSER"
+			) {
+				return true;
+			}
+			res.status(403).json({
+				message: "Oops! You don't have access to this",
+			});
+			return false;
 		}
-		res.status(403).json({
-			message: "Oops! You don't have access to this",
-		});
-		return false;
-	});
+	);
 	isAllowed && next();
 };
 
-const getRolesAndPermissions = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const getRolesAndPermissions = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		return res.status(200).json({
 			message: "success",
 			data: { roles, permissions: accesses },
@@ -27,8 +38,8 @@ const getRolesAndPermissions = async (req, res) => {
 	});
 };
 
-const getSkillsAndEvents = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const getSkillsAndEvents = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const Events = await prisma.events.findMany({
 			select: {
 				eventID: true,
@@ -41,16 +52,16 @@ const getSkillsAndEvents = async (req, res) => {
 	});
 };
 
-const getDeptList = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const getDeptList = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		return res
 			.status(200)
 			.json({ message: "success", Departments: courses });
 	});
 };
 
-const getSkillsList = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const getSkillsList = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		return res.status(200).json({ message: "success", skills });
 	});
 };
@@ -71,16 +82,16 @@ const getAllUsers = async () => {
 	});
 };
 
-const usersList = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const usersList = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		return res
 			.status(200)
 			.json({ message: "success", data: await getAllUsers() });
 	});
 };
 
-const editUser = async (req, res) => {
-	asyncWrapper(req, res, async (req, res) => {
+const editUser = async (req: Request, res: Response) => {
+	asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const { newAccess, userToUpdate, NewRole } = req.body;
 		await prisma.users.update({
 			where: {
@@ -97,8 +108,8 @@ const editUser = async (req, res) => {
 	});
 };
 
-const verifyPayment = async (req, res) => {
-	asyncWrapper(req, res, async (req, res) => {
+const verifyPayment = async (req: Request, res: Response) => {
+	asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const { userToVerify } = req.body;
 		await prisma.users.update({
 			where: {
@@ -114,15 +125,15 @@ const verifyPayment = async (req, res) => {
 			},
 			select: { email: true },
 		});
-		await sendMail(user.email);
+		await sendMail(user?.email);
 		return res
 			.status(200)
 			.json({ message: "success", data: await getAllUsers() });
 	});
 };
 
-const setUserInfo = async (req, res) => {
-	asyncWrapper(req, res, async (req, res) => {
+const setUserInfo = async (req: Request, res: Response) => {
+	asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const {
 			Department,
 			Name,
@@ -144,9 +155,10 @@ const setUserInfo = async (req, res) => {
 			DOB !== null
 		) {
 			profileStatus = true;
-		}
-		else{
-			return res.status(200).json({message:"Please fill in all the details!"})
+		} else {
+			return res
+				.status(200)
+				.json({ message: "Please fill in all the details!" });
 		}
 		await prisma.users.update({
 			where: {
@@ -167,17 +179,17 @@ const setUserInfo = async (req, res) => {
 		if (PaymentID) {
 			res.clearCookie("accessToken", {
 				expires: new Date(Date.now() + 3600000 * 24),
-				domain: serverURL,
+				domain: secrets.serverURL,
 				path: "/api",
 				httpOnly: true,
-				sameSite: "None",
+				sameSite: "none",
 				secure: true,
 			});
 		}
 		res.status(200).json({ message: "success" });
 	});
 };
-module.exports = {
+export {
 	editUser,
 	verifyPayment,
 	usersList,

@@ -1,12 +1,12 @@
 import * as jwt from "jsonwebtoken";
 import oauth2Client from "../utils/oauth2Client";
-import { Auth } from "googleapis";
 import { Request, Response, RequestHandler, NextFunction } from "express";
 import { z } from "zod";
 import secrets from "../utils/secrets";
 import prisma from "../utils/db";
 import asyncWrapper from "../utils/asyncWrapper";
 import generateUID from "../utils/generateUID";
+import { userType } from "../utils/customTypes";
 
 const auth: RequestHandler = async (
 	req: Request,
@@ -49,7 +49,7 @@ const auth: RequestHandler = async (
 				);
 				res.cookie("accessToken", accessToken, {
 					expires: new Date(Date.now() + 3600000 * 24),
-					domain: serverURL,
+					domain: secrets.serverURL,
 					path: "/api",
 					httpOnly: true,
 					sameSite: "none",
@@ -63,7 +63,7 @@ const auth: RequestHandler = async (
 				if (error.message === "TokenExpiredError") {
 					res.clearCookie("accessToken", {
 						expires: new Date(Date.now() + 3600000 * 24),
-						domain: serverURL,
+						domain: secrets.serverURL,
 						path: "/api",
 						httpOnly: true,
 						sameSite: "none",
@@ -83,7 +83,7 @@ const auth: RequestHandler = async (
 const userStatus: RequestHandler = async (
 	req: Request,
 	res: Response,
-	next
+	next: NextFunction
 ) => {
 	const user = await getUserByEmail(res.locals.email);
 	if (user && user.paymentStatus === "PENDING") {
@@ -144,7 +144,7 @@ const handleRedirect = async (req: Request, res: Response) => {
 			return res
 				.status(200)
 				.redirect(
-					`${clientURL_2}/register?error=Please use organization email only`
+					`${secrets.clientURL_2}/register?error=Please use organization email only`
 				);
 		}
 
@@ -161,7 +161,7 @@ const handleRedirect = async (req: Request, res: Response) => {
 				email: z.string().parse(user.email),
 				isVerified: user.email_verified,
 				profileImg: user.picture,
-				name: user.family_name,
+				name: user.family_name || user.given_name || user.family_name,
 				IDCardNum: prevUser?.IDCardNum
 					? generateUID(prevUser)
 					: "RCN" + new Date().getFullYear() + "0A01",
@@ -189,7 +189,7 @@ const handleRedirect = async (req: Request, res: Response) => {
 
 		res.cookie("accessToken", accessToken, {
 			expires: new Date(Date.now() + 3600000 * 24),
-			domain: serverURL,
+			domain: secrets.serverURL,
 			path: "/api",
 			httpOnly: true,
 			sameSite: "none",
@@ -197,7 +197,7 @@ const handleRedirect = async (req: Request, res: Response) => {
 		});
 
 		//Redirect back to register page
-		return res.redirect(`${clientURL_2}/register`);
+		return res.redirect(`${secrets.clientURL_2}/register`);
 	});
 };
 
@@ -207,37 +207,39 @@ const getUserByEmail = async (email: string) => {
 			email,
 		},
 		select: {
-			name: true,
-			profileImg: true,
-			role: true,
+			email: true,
 			dob: true,
-			skills: true,
-			yearOfStudy: true,
-			hasAccessTo: true,
 			usn: true,
+			name: true,
+			role: true,
+			phone: true,
+			course: true,
+			skills: true,
+			userID: true,
+			IDCardNum: true,
+			paymentID: true,
+			attendance: true,
+			isVerified: true,
+			profileImg: true,
+			yearOfStudy: true,
+			refreshToken: true,
+			paymentStatus: true,
+			hasAccessTo: true,
+			isProfileComplete: true,
 			Events: {
 				select: {
+					desc: true,
 					eventID: true,
-					eventDate: true,
 					eventName: true,
 				},
 			},
-			email: true,
-			isProfileComplete: true,
-			isVerified: true,
-			IDCardNum: true,
-			password: true,
-			paymentID: true,
-			phone: true,
-			course: true,
-			paymentStatus: true,
 		},
 	});
 };
 
 const me = async (req: Request, res: Response) => {
 	await asyncWrapper(req, res, async (req: Request, res: Response) => {
-		const user = res.locals.user;
+		const user: userType = res.locals.user;
 		res.status(200).json({
 			user: {
 				Name: user.name,
@@ -265,7 +267,7 @@ const me = async (req: Request, res: Response) => {
 const logout = (req: Request, res: Response) => {
 	res.clearCookie("accessToken", {
 		expires: new Date(Date.now() + 3600000 * 24),
-		domain: serverURL,
+		domain: secrets.serverURL,
 		path: "/api",
 		httpOnly: true,
 		sameSite: "none",
@@ -284,7 +286,7 @@ const deleteAccount = async (req: Request, res: Response) => {
 		});
 		res.clearCookie("accessToken", {
 			expires: new Date(Date.now() + 3600000),
-			domain: serverURL,
+			domain: secrets.serverURL,
 			path: "/api",
 			httpOnly: true,
 			sameSite: "none",
@@ -293,7 +295,35 @@ const deleteAccount = async (req: Request, res: Response) => {
 		return res.status(200).json({ message: "success" });
 	});
 };
-export  {
+
+const select = {
+	name: true,
+	profileImg: true,
+	role: true,
+	dob: true,
+	skills: true,
+	yearOfStudy: true,
+	hasAccessTo: true,
+	usn: true,
+	Events: {
+		select: {
+			eventID: true,
+			eventDate: true,
+			eventName: true,
+		},
+	},
+	email: true,
+	isProfileComplete: true,
+	isVerified: true,
+	IDCardNum: true,
+	password: true,
+	paymentID: true,
+	phone: true,
+	course: true,
+	paymentStatus: true,
+};
+
+export {
 	register,
 	me,
 	logout,
