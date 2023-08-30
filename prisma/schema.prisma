@@ -21,17 +21,18 @@ model Users {
   profileImg   String?
   role         roles       @default(MEMBER)
   hasAccessTo  accesses    @default(NO_EDIT_ACCESS)
-  Inventory    Inventory[]
+  Inventory    Inventory[] 
   Events       Events[]
   skills	   skills?
   dob		   DateTime?
   eventID      String?
   expenses     Expenses[]
   isVerified   Boolean     @default(false)
+  attendance   Int			@default(0)
   paymentID String?
   paymentStatus paymentStatus @default(PENDING)
   isProfileComplete   Boolean     @default(false)
-  refreshToken String      @db.Text
+  refreshToken String?      @db.Text
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   yearOfStudy  Int?
@@ -135,9 +136,14 @@ enum expense_catagories {
 }
 
 enum inventory_catagories {
-  IOT
-  WARBOT
-  STATIONARY
+WARBOT
+STATIONARY
+BOT_BUILDING_WORKSHOP
+IOT
+INTERNET_OF_THINGS
+MODELLING
+MACHINE_LEARNING
+PCB_DESIGN
 }
 
 enum status {
@@ -168,8 +174,8 @@ enum courses{
 	}
 
 	enum skills{
-		BEGINNER_EXITED_TO_GET_STARTED @map("A BEGINNER AND EXITED TO GET STARTED")
-		BASICS_WEB_DEV @map("I KNOW BASICS OF WEB DEV")
-		IOT @map("SOMETHING ABOUT IOT")
-		DESIGN @map("I AM MORE INTO DESIGNING(CAD, FUSION 360 etc)")
-	}
+	NEWBIE_EXPLORATIONS
+	TAKING_STEPS_BEYOND_BASICS
+	GETTING_THE_HANG_OF_THINGS
+	MASTER_OF_THE_CRAFT
+		}
