@@ -5,6 +5,8 @@ import { Request, Response, NextFunction } from "express";
 import { roles, accesses, skills, courses } from "@prisma/client";
 import sendMail from "../utils/sendOTP";
 import { z } from "zod";
+import fs from "fs"
+import os from "os"
 const verifyAccessToResorce = async (
 	req: Request,
 	res: Response,
@@ -193,8 +195,8 @@ const setUserInfo = async (req: Request, res: Response) => {
 	});
 };
 
-const downloadUsersList = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const downloadUsersList = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		if (
 			res.locals.user.hasAccessTo === "ADMIN" ||
 			res.locals.user.hasAccessTo === "SUPERUSER"

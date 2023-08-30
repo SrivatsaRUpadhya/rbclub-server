@@ -1,10 +1,12 @@
-const router = require("express").Router();
-const { auth, userStatus } = require("../Controllers/auth.controller");
-const {
+import { auth, userStatus } from "../Controllers/auth.controller";
+import { Router } from "express";
+const router  = Router()
+
+import {
 	updateAttendance,
 	getAttendanceList,
 	dowonloadAttendanceList,
-} = require("../Controllers/attendance.controller");
+} from "../Controllers/attendance.controller";
 
 router.post(
 	"/api/attendance/submitAttendance",
@@ -25,4 +27,4 @@ router.get(
 	dowonloadAttendanceList
 );
 
-module.exports = router;
+export default router;

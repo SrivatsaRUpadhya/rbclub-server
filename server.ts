@@ -10,6 +10,7 @@ import eventsRouter from "./Routes/events.router";
 import usersRouter from "./Routes/users.router";
 import settingsRouter from "./Routes/settings.router";
 import driveRouter from "./Routes/drive.router";
+import attendanceRouter from "./Routes/attendance.router";
 import secrets from "./utils/secrets";
 import { handleRedirect } from "./Controllers/auth.controller";
 import { z } from "zod";
@@ -41,7 +42,7 @@ try {
 			}
 		},
 		credentials: true,
-		methods:['GET', 'DELETE', 'POST'],
+		methods: ["GET", "DELETE", "POST"],
 		allowedHeaders: ["Content-Type"],
 		exposedHeaders: ["set-cookie"],
 	};
@@ -60,7 +61,7 @@ try {
 	app.use(usersRouter);
 	app.use(settingsRouter);
 	app.use(driveRouter);
-
+	app.use(attendanceRouter);
 	app.listen(process.env.PORT, () => {
 		console.log(`Server live on port: ${process.env.PORT}`);
 	});

@@ -1,16 +1,18 @@
-const prisma = require("../utils/db");
-const asyncWrapper = require("../utils/asyncWrapper");
-const fs = require("fs");
-const os = require("os");
-const updateAttendance = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+import prisma from "../utils/db";
+import asyncWrapper from "../utils/asyncWrapper";
+import os from "os";
+import fs from "fs";
+import { Request, Response } from "express";
+
+const updateAttendance = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const user = res.locals.user;
 		if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "SUPERUSER") {
 			try {
 				const { AttendanceList } = req.body;
 
 				const update = Promise.all(
-					AttendanceList.map(async (element) => {
+					AttendanceList.map(async (element: string) => {
 						try {
 							await prisma.users.updateMany({
 								where: {
@@ -38,8 +40,8 @@ const updateAttendance = async (req, res) => {
 	});
 };
 
-const getAttendanceList = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const getAttendanceList = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const user = res.locals.user;
 		if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "SUPERUSER") {
 			try {
@@ -59,8 +61,8 @@ const getAttendanceList = async (req, res) => {
 	});
 };
 
-const dowonloadAttendanceList = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const dowonloadAttendanceList = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const user = res.locals.user;
 		if (user.hasAccessTo === "ADMIN" || user.hasAccessTo === "SUPERUSER") {
 			try {
@@ -100,7 +102,7 @@ const dowonloadAttendanceList = async (req, res) => {
 	});
 };
 
-module.exports = {
+export {
 	updateAttendance,
 	getAttendanceList,
 	dowonloadAttendanceList,
