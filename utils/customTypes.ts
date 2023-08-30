@@ -6,7 +6,7 @@ export interface eventsType {
 	EventId?: string;
 	EventName?: string;
 	EventDate?: z.ZodDate;
-	Catagory??: String;
+	Catagory?: String;
 	Desc?: String;
 	Max_entries?: number;
 	Users?: userType[];
@@ -32,7 +32,7 @@ export interface userType {
 	paymentStatus?: paymentStatus;
 	hasAccessTo?: accesses;
 	isProfileComplete: string;
-	Events?: [
+	Events: [
 		{
 			desc?: string;
 			eventID: string;
@@ -42,13 +42,16 @@ export interface userType {
 }
 
 export type InventoryItemType = {
-  Name: string
-  Quantity: string
-  Condition: string | null
-  Remarks: string | null
-  Catagory: inventory_catagories
-}
+	Name: string;
+	Quantity: string;
+	Condition: string | null;
+	Remarks: string | null;
+	Catagory: inventory_catagories;
+};
 
-export type ExpenseType = {
-
-}
+export const jwtPayloadSchema = z.object({
+	data: z.string(),
+	iat: z.number(),
+	exp: z.number(),
+	// Add other expected properties here
+});

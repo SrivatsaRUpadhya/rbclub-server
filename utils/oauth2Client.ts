@@ -7,5 +7,5 @@ const oauth2Client = new google.auth.OAuth2(
 	secrets.oauthRedirectURL
 );
 
-oauth2Client.setCredentials({ refresh_token: googleRefreshToken });
+oauth2Client.setCredentials({ refresh_token: secrets.googleRefreshToken });
 export default oauth2Client;

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-const wraper = async (req: Request, res: Response, func: Function) => {
+const asyncWraper = async (req: Request, res: Response, func: Function) => {
 	try {
 		return await func(req, res);
 	} catch (error) {
@@ -8,4 +8,4 @@ const wraper = async (req: Request, res: Response, func: Function) => {
 		return res.status(500).json({ message: "An error occurred!" });
 	}
 };
-export default  wraper;
+export default  asyncWraper;

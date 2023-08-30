@@ -7,7 +7,6 @@ import {
 	editEvent,
 	deleteEvent,
 	registerForEvent,
-	verifyAccess,
 	getEvents,
 } from "../Controllers/events.controller";
 import { auth, userStatus } from "../Controllers/auth.controller";
@@ -35,11 +34,6 @@ router.post(
 	deleteEvent
 );
 router.post("/api/events/register", auth, registerForEvent);
-router.post(
-	"/api/events/verifyAccess",
-	auth,
-	verifyAccessToEvents,
-	verifyAccess
-);
+
 
 export default router;

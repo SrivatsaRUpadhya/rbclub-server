@@ -2,8 +2,9 @@ import secrets from "../utils/secrets";
 import prisma from "../utils/db";
 import asyncWrapper from "../utils/asyncWrapper";
 import { Request, Response, NextFunction } from "express";
-import { roles, accesses,skills,courses } from "@prisma/client";
-
+import { roles, accesses, skills, courses } from "@prisma/client";
+import sendMail from "../utils/sendOTP";
+import { z } from "zod";
 const verifyAccessToResorce = async (
 	req: Request,
 	res: Response,
@@ -125,7 +126,7 @@ const verifyPayment = async (req: Request, res: Response) => {
 			},
 			select: { email: true },
 		});
-		await sendMail(user?.email);
+		await sendMail(z.string().parse(user?.email));
 		return res
 			.status(200)
 			.json({ message: "success", data: await getAllUsers() });

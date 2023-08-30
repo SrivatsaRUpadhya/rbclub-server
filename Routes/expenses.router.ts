@@ -6,7 +6,7 @@ import {
 	deleteExpense,
 	getExpenseByUser,
 	getAllExpenses,
-} from "../Controllers/expense.controller.ts";
+} from "../Controllers/expense.controller";
 
 router.post("/api/expenses/addExpenseByUser", auth, userStatus, addExpense);
 router.post(
@@ -23,4 +23,4 @@ router.delete(
 );
 router.get("/api/expenses/getAllExpenses", getAllExpenses);
 
-export router;
+export default router;

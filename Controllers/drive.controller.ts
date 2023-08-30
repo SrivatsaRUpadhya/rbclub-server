@@ -1,14 +1,14 @@
-const { google } = require("googleapis");
-const oauth2Client = require("../utils/oauth2Client");
-const { googleRefreshToken } = require("../utils/secrets");
-const asyncWrapper = require("../utils/asyncWrapper");
-
-const getFilesList = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+import { google } from "googleapis";
+import oauth2Client from "../utils/oauth2Client";
+import asyncWrapper from "../utils/asyncWrapper";
+import { Request, Response } from "express";
+const getFilesList = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const { FileType } = req.body;
-		const access_token = await oauth2Client.getAccessToken()
+		const access_token = await oauth2Client.getAccessToken();
+		console.log(access_token);
 		oauth2Client.setCredentials({
-			access_token
+			access_token: access_token.token,
 		});
 
 		const driveInstance = google.drive("v3");
@@ -30,4 +30,4 @@ const getFilesList = async (req, res) => {
 	});
 };
 
-module.exports = { getFilesList };
+export { getFilesList };

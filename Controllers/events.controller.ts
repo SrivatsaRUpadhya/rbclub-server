@@ -11,27 +11,21 @@ const verifyAccessToEvents = async (
 	next: NextFunction
 ) => {
 	try {
-		async (req: Request, res: Response) => {
-			const user = await getUserByEmail(res.locals.email);
-			if (
-				user?.hasAccessTo === "ADMIN" ||
-				user?.hasAccessTo === "EVENTS" ||
-				user?.hasAccessTo === "SUPERUSER"
-			) {
-				res.locals.user = user;
-				next();
-			}
-			return res.status(403).json({
-				message: "Oops! You don't have access to this",
-			});
-		};
+		const user: userType = res.locals.user;
+		if (
+			user?.hasAccessTo === "ADMIN" ||
+			user?.hasAccessTo === "EVENTS" ||
+			user?.hasAccessTo === "SUPERUSER"
+		) {
+			res.locals.user = user;
+			return next();
+		}
+		return res.status(403).json({
+			message: "Oops! You don't have access to this",
+		});
 	} catch (error) {
 		return res.status(500).json({ message: "An error occurred!" });
 	}
-};
-
-const verifyAccess = async (req: Request, res: Response) => {
-	return res.status(200).json({ message: "success" });
 };
 
 const fetchEvents = async (fetchType?: "Admin") => {
@@ -79,15 +73,20 @@ const addEvent = async (req: Request, res: Response) => {
 				Date: string;
 				MaxEntries: string;
 			}) => {
-				await prisma.events.create({
-					data: {
-						eventName: element.Name,
-						catagory: element.Catagory,
-						desc: element.Description,
-						eventDate: new Date(element.Date),
-						max_entries: parseInt(element.MaxEntries),
-					},
-				});
+				try {
+					await prisma.events.create({
+						data: {
+							eventName: element.Name,
+							catagory: element.Catagory,
+							desc: element.Description,
+							eventDate: new Date(element.Date),
+							max_entries: parseInt(element.MaxEntries),
+						},
+					});
+				} catch (err) {
+					console.log(err);
+					throw err;
+				}
 			}
 		);
 		const inventoryItems = await fetchEvents();
@@ -129,12 +128,12 @@ const registerForEvent = async (req: Request, res: Response) => {
 		if (!EventID) {
 			return res.status(200).json({ message: "Invalid Request!" });
 		}
-		const user: userType = res.locals.user;
 		const email = res.locals.email;
+		const user = await getUserByEmail(email);
 		const settings = await prisma.settings.findFirst();
 		if (settings?.eventLimitPerUser !== -1) {
 			if (
-				z.number().parse(user?.Events.length) >=
+				z.number().parse(user?.Events?.length) >=
 				z.number().parse(settings?.eventLimitPerUser)
 			) {
 				return res.status(200).json({ message: "Limit reached!" });
@@ -209,7 +208,6 @@ export {
 	addEvent,
 	getEvents,
 	verifyAccessToEvents,
-	verifyAccess,
 	editEvent,
 	registerForEvent,
 	deleteEvent,

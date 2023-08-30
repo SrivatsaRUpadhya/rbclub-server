@@ -6,7 +6,7 @@ import secrets from "../utils/secrets";
 import prisma from "../utils/db";
 import asyncWrapper from "../utils/asyncWrapper";
 import generateUID from "../utils/generateUID";
-import { userType } from "../utils/customTypes";
+import { userType, jwtPayloadSchema } from "../utils/customTypes";
 
 const auth: RequestHandler = async (
 	req: Request,
@@ -14,25 +14,22 @@ const auth: RequestHandler = async (
 	next: NextFunction
 ) => {
 	let { accessToken }: { accessToken: string } = req.cookies;
-	if (!accessToken) {
-		return res.status(401).json({ message: "Unauthorized Request!" });
-	}
 	try {
-		const email = jwt.verify(
-			z.string().parse(accessToken),
-			secrets.accessTokenSecret
+		if (!accessToken) {
+			return res.status(401).json({ message: "Unauthorized Request!" });
+		}
+		const data = jwtPayloadSchema.parse(
+			jwt.verify(accessToken, secrets.accessTokenSecret)
 		);
-		res.locals.email = email;
+		res.locals.email = data.data;
 		next();
 	} catch (error: jwt.TokenExpiredError | any) {
 		if (error.name === "TokenExpiredError") {
 			try {
-				const email = z
-					.string()
-					.parse(jwt.verify(accessToken, secrets.accessTokenSecret));
+				const email = jwt.decode(accessToken);
 				const user = await prisma.users.findFirst({
 					where: {
-						email,
+						email: z.string().parse(email),
 					},
 				});
 
@@ -40,14 +37,14 @@ const auth: RequestHandler = async (
 					z.string().parse(user?.refreshToken),
 					secrets.refreshTokenSecret
 				);
-				accessToken = jwt.sign(
+				const newAccessToken = jwt.sign(
 					{ data: email },
 					secrets.accessTokenSecret,
 					{
 						expiresIn: "24h",
 					}
 				);
-				res.cookie("accessToken", accessToken, {
+				res.cookie("accessToken", newAccessToken, {
 					expires: new Date(Date.now() + 3600000 * 24),
 					domain: secrets.serverURL,
 					path: "/api",
@@ -97,7 +94,8 @@ const userStatus: RequestHandler = async (
 				Usn: user.usn,
 				Permissions: user.hasAccessTo,
 				Events: user.Events,
-				ID: user.IDCardNum,
+				UserID: user.userID,
+				RcnID: user.IDCardNum,
 				Skills: user.skills,
 				Phone: user.phone,
 				Department: user.course,
@@ -180,7 +178,7 @@ const handleRedirect = async (req: Request, res: Response) => {
 
 		//Generate and send accessToken
 		const accessToken = jwt.sign(
-			{ data: user.email },
+			{ data: z.string().parse(user.email) },
 			secrets.accessTokenSecret,
 			{
 				expiresIn: "24h",
@@ -202,39 +200,44 @@ const handleRedirect = async (req: Request, res: Response) => {
 };
 
 const getUserByEmail = async (email: string) => {
-	return await prisma.users.findUnique({
-		where: {
-			email,
-		},
-		select: {
-			email: true,
-			dob: true,
-			usn: true,
-			name: true,
-			role: true,
-			phone: true,
-			course: true,
-			skills: true,
-			userID: true,
-			IDCardNum: true,
-			paymentID: true,
-			attendance: true,
-			isVerified: true,
-			profileImg: true,
-			yearOfStudy: true,
-			refreshToken: true,
-			paymentStatus: true,
-			hasAccessTo: true,
-			isProfileComplete: true,
-			Events: {
-				select: {
-					desc: true,
-					eventID: true,
-					eventName: true,
+	try {
+		return await prisma.users.findUnique({
+			where: {
+				email,
+			},
+			select: {
+				email: true,
+				dob: true,
+				usn: true,
+				name: true,
+				role: true,
+				phone: true,
+				course: true,
+				skills: true,
+				userID: true,
+				IDCardNum: true,
+				paymentID: true,
+				attendance: true,
+				isVerified: true,
+				profileImg: true,
+				yearOfStudy: true,
+				refreshToken: true,
+				paymentStatus: true,
+				hasAccessTo: true,
+				isProfileComplete: true,
+				Events: {
+					select: {
+						desc: true,
+						eventID: true,
+						eventName: true,
+					},
 				},
 			},
-		},
-	});
+		});
+	} catch (error) {
+		console.log(error);
+		throw error;
+	}
 };
 
 const me = async (req: Request, res: Response) => {
@@ -249,7 +252,8 @@ const me = async (req: Request, res: Response) => {
 				Usn: user.usn,
 				Permissions: user.hasAccessTo,
 				Events: user.Events,
-				ID: user.IDCardNum,
+				UserID: user.userID,
+				RcnID: user.IDCardNum,
 				Skills: user.skills,
 				Phone: user.phone,
 				Department: user.course,
@@ -282,6 +286,26 @@ const deleteAccount = async (req: Request, res: Response) => {
 		await prisma.users.delete({
 			where: {
 				email,
+			},
+		});
+		res.clearCookie("accessToken", {
+			expires: new Date(Date.now() + 3600000),
+			domain: secrets.serverURL,
+			path: "/api",
+			httpOnly: true,
+			sameSite: "none",
+			secure: true,
+		});
+		return res.status(200).json({ message: "success" });
+	});
+};
+const deleteUserById = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
+		const email = res.locals.user;
+		const { userID } = req.body;
+		await prisma.users.delete({
+			where: {
+				userID,
 			},
 		});
 		res.clearCookie("accessToken", {
@@ -332,4 +356,5 @@ export {
 	getUserByEmail,
 	handleRedirect,
 	userStatus,
+	deleteUserById,
 };
