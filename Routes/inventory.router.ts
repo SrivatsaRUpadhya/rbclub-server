@@ -1,13 +1,15 @@
-const router = require("express").Router();
-const {
+import { Router } from "express";
+const router = Router();
+
+import {
 	addItem,
 	getInventory,
 	verifyAccessToInventory,
 	getInventoryCategories,
 	editItem,
 	deleteItem,
-} = require("../Controllers/inventory.controller");
-const { auth, userStatus } = require("../Controllers/auth.controller");
+} from "../Controllers/inventory.controller";
+import { auth, userStatus } from "../Controllers/auth.controller";
 router.post(
 	"/api/inventory/addToInventory",
 	auth,
@@ -43,4 +45,4 @@ router.post(
 	verifyAccessToInventory,
 	editItem
 );
-module.exports = router;
+export default router;

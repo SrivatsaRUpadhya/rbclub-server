@@ -1,11 +1,12 @@
-const router = require("express").Router();
-const { auth, userStatus } = require("../Controllers/auth.controller");
-const {
+import { Router } from "express";
+	const router = Router()
+import { auth, userStatus } from "../Controllers/auth.controller";
+import {
 	addExpense,
 	deleteExpense,
 	getExpenseByUser,
 	getAllExpenses,
-} = require("../Controllers/expense.controller");
+} from "../Controllers/expense.controller";
 
 router.post("/api/expenses/addExpenseByUser", auth, userStatus, addExpense);
 router.post(
@@ -22,4 +23,4 @@ router.delete(
 );
 router.get("/api/expenses/getAllExpenses", getAllExpenses);
 
-module.exports = router;
+export default router;

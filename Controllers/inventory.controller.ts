@@ -1,18 +1,31 @@
-const prisma = require("../utils/db");
-const asyncWrapper = require("../utils/asyncWrapper");
-const { checkPassword } = require("../utils/passwords");
-const { inventory_catagories } = require("@prisma/client");
-const verifyAccessToInventory = async (req, res, next) => {
-	const isAllowed = asyncWrapper(req, res, async (req, res, next) => {
-		const user = res.locals.user;
-if (user.accesses == "ADMIN" || user.accesses == "INVENTORY" ||user.hasAccessTo === "SUPERUSER" ) {
-			return true;
-		}
-		return false;
-	});
-	isAllowed && next();
-};
+import prisma from "../utils/db";
+import asyncWrapper from "../utils/asyncWrapper";
+import { Request, Response, NextFunction } from "express";
+import { inventory_catagories } from "@prisma/client";
+import { InventoryItemType, userType } from "../utils/customTypes";
 
+const verifyAccessToInventory = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const user = await prisma.users.findUnique({
+			where: { email: res.locals.email },
+		});
+		if (
+			user?.hasAccessTo == "ADMIN" ||
+			user?.hasAccessTo == "INVENTORY" ||
+			user?.hasAccessTo === "SUPERUSER"
+		) {
+			res.locals.user = user;
+			return next();
+		}
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({ message: "An error occurred!" });
+	}
+};
 const fetchInventory = async () => {
 	try {
 		return await prisma.inventory.findMany({
@@ -33,13 +46,13 @@ const fetchInventory = async () => {
 	}
 };
 
-const addItem = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const addItem = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const { List } = req.body;
-		const user = res.locals.user;
+		const user: userType = res.locals.user;
 		async function addItems() {
 			try {
-				List.map(async (element) => {
+				List.map(async (element: InventoryItemType) => {
 					await prisma.inventory.create({
 						data: {
 							quantity: parseInt(element.Quantity),
@@ -56,19 +69,19 @@ const addItem = async (req, res) => {
 					});
 				});
 			} catch (error) {
-				throw new Error(error);
+				throw error;
 			}
 		}
 		await addItems();
-		const inventoryItems = await fetchInventory(user.userID);
+		const inventoryItems = await fetchInventory();
 		return res
 			.status(200)
 			.json({ message: "success", data: inventoryItems });
 	});
 };
 
-const getInventory = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const getInventory = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		res.status(200).json({
 			message: "success",
 			data: await fetchInventory(),
@@ -76,16 +89,16 @@ const getInventory = async (req, res) => {
 	});
 };
 
-const getInventoryCategories = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const getInventoryCategories = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		return res
 			.status(200)
 			.json({ message: "success", categories: inventory_catagories });
 	});
 };
 
-const editItem = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const editItem = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const { ItemID, Quantity, Catagory, ItemName, Condition, Remarks } =
 			req.body;
 		await prisma.inventory.update({
@@ -104,8 +117,8 @@ const editItem = async (req, res) => {
 	});
 };
 
-const deleteItem = async (req, res) => {
-	await asyncWrapper(req, res, async (req, res) => {
+const deleteItem = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
 		const { itemID } = req.body;
 		await prisma.inventory.delete({
 			where: {
@@ -116,7 +129,7 @@ const deleteItem = async (req, res) => {
 	});
 };
 
-module.exports = {
+export {
 	addItem,
 	getInventory,
 	verifyAccessToInventory,

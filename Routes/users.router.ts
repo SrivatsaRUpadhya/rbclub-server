@@ -1,6 +1,7 @@
-const router = require("express").Router();
-const { auth, userStatus } = require("../Controllers/auth.controller");
-const {
+import { Router } from "express";
+const router = Router();
+
+import {
 	verifyPayment,
 	editUser,
 	usersList,
@@ -8,11 +9,11 @@ const {
 	verifyAccessToResorce,
 	setUserInfo,
 	getDeptList,
-	getSkillsList,
 	getSkillsAndEvents,
 	downloadUsersList,
-} = require("../Controllers/users.controller");
 
+} from "../Controllers/users.controller";
+import { auth, userStatus } from "../Controllers/auth.controller";
 router.post(
 	"/api/users/verifyPayment",
 	auth,
@@ -46,4 +47,4 @@ router.post("/api/users/getDeptList", auth, getDeptList);
 router.post("/api/users/getSkillsAndEvents", auth, getSkillsAndEvents);
 router.get("/api/users/downloadUsersList", auth, userStatus, downloadUsersList);
 
-module.exports = router;
+export default router;

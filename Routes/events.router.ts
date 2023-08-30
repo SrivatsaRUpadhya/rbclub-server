@@ -1,14 +1,16 @@
-const router = require("express").Router();
-const { auth, userStatus } = require("../Controllers/auth.controller");
-const {
-	addEvent,
-	getEvents,
+import { Router } from "express";
+const router = Router();
+
+import {
 	verifyAccessToEvents,
+	addEvent,
 	editEvent,
-	registerForEvent,
 	deleteEvent,
-	verifyAccess,
-} = require("../Controllers/events.controller");
+	registerForEvent,
+	getEvents,
+} from "../Controllers/events.controller";
+import { auth, userStatus } from "../Controllers/auth.controller";
+
 router.post(
 	"/api/events/addEvents",
 	auth,
@@ -32,6 +34,6 @@ router.post(
 	deleteEvent
 );
 router.post("/api/events/register", auth, registerForEvent);
-router.post("/api/events/verifyAccess", auth, verifyAccess);
 
-module.exports = router;
+
+export default router;

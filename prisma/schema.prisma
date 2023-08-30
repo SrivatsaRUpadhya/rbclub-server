@@ -21,7 +21,7 @@ model Users {
   profileImg   String?
   role         roles       @default(MEMBER)
   hasAccessTo  accesses    @default(NO_EDIT_ACCESS)
-  Inventory    Inventory[]
+  Inventory    Inventory[] 
   Events       Events[]
   skills	   skills?
   dob		   DateTime?
