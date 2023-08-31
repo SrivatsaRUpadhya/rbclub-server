@@ -145,7 +145,6 @@ const handleRedirect = async (req: Request, res: Response) => {
 					`${secrets.clientURL_2}/register?error=Please use organization email only`
 				);
 		}
-		
 
 		//Verify if user is from nmamit
 		if (user.hd !== "nmamit.in") {
@@ -155,7 +154,6 @@ const handleRedirect = async (req: Request, res: Response) => {
 					`${secrets.clientURL_2}/register?error=Oops! Looks like you are not allowed to access this!. If you think this is an error please contact us at roboticsclub@nmamit.in.`
 				);
 		}
-
 
 		//Register or login the user
 		const allUsers = await prisma.users.findMany();
@@ -174,7 +172,7 @@ const handleRedirect = async (req: Request, res: Response) => {
 				IDCardNum: prevUser?.IDCardNum
 					? generateUID(prevUser)
 					: "RCN" + new Date().getFullYear() + "0A01",
-				refreshToken: z.string().parse(tokens.refresh_token),
+				refreshToken: tokens.refresh_token,
 			},
 			update: {
 				email: user.email,
