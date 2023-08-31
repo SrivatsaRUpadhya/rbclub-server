@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const router = (0, express_1.Router)();
+const inventory_controller_1 = require("../Controllers/inventory.controller");
+const auth_controller_1 = require("../Controllers/auth.controller");
+router.post("/api/inventory/addToInventory", auth_controller_1.auth, auth_controller_1.userStatus, inventory_controller_1.verifyAccessToInventory, inventory_controller_1.addItem);
+router.post("/api/inventory/listInventory", auth_controller_1.auth, auth_controller_1.userStatus, inventory_controller_1.verifyAccessToInventory, inventory_controller_1.getInventory);
+router.post("/api/inventory/getInventoryCategories", auth_controller_1.auth, auth_controller_1.userStatus, inventory_controller_1.verifyAccessToInventory, inventory_controller_1.getInventoryCategories);
+router.post("/api/inventory/deleteItemById", auth_controller_1.auth, auth_controller_1.userStatus, inventory_controller_1.verifyAccessToInventory, inventory_controller_1.deleteItem);
+router.post("/api/inventory/editItemById", auth_controller_1.auth, auth_controller_1.userStatus, inventory_controller_1.verifyAccessToInventory, inventory_controller_1.editItem);
+exports.default = router;

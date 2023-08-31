@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const auth_controller_1 = require("../Controllers/auth.controller");
+const express_1 = require("express");
+const router = (0, express_1.Router)();
+const attendance_controller_1 = require("../Controllers/attendance.controller");
+router.post("/api/attendance/submitAttendance", auth_controller_1.auth, auth_controller_1.userStatus, attendance_controller_1.updateAttendance);
+router.get("/api/attendance/getAttendanceList", auth_controller_1.auth, auth_controller_1.userStatus, attendance_controller_1.getAttendanceList);
+router.get("/api/attendance/downloadAttendance", auth_controller_1.auth, auth_controller_1.userStatus, attendance_controller_1.dowonloadAttendanceList);
+exports.default = router;

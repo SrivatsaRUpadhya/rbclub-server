@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const router = (0, express_1.Router)();
+const users_controller_1 = require("../Controllers/users.controller");
+const auth_controller_1 = require("../Controllers/auth.controller");
+router.post("/api/users/verifyPayment", auth_controller_1.auth, auth_controller_1.userStatus, users_controller_1.verifyAccessToResorce, users_controller_1.verifyPayment);
+router.post("/api/users/editUser", auth_controller_1.auth, auth_controller_1.userStatus, users_controller_1.verifyAccessToResorce, users_controller_1.editUser);
+router.post("/api/users/usersList", auth_controller_1.auth, auth_controller_1.userStatus, users_controller_1.verifyAccessToResorce, users_controller_1.usersList);
+router.post("/api/users/getRolesAndPermissions", auth_controller_1.auth, auth_controller_1.userStatus, users_controller_1.verifyAccessToResorce, users_controller_1.getRolesAndPermissions);
+router.post("/api/users/setUserInfo", auth_controller_1.auth, users_controller_1.setUserInfo);
+router.post("/api/users/getDeptList", auth_controller_1.auth, users_controller_1.getDeptList);
+router.post("/api/users/getSkillsAndEvents", auth_controller_1.auth, users_controller_1.getSkillsAndEvents);
+router.get("/api/users/downloadUsersList", auth_controller_1.auth, auth_controller_1.userStatus, users_controller_1.downloadUsersList);
+exports.default = router;

@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const router = (0, express_1.Router)();
+const auth_controller_1 = require("../Controllers/auth.controller");
+const expense_controller_1 = require("../Controllers/expense.controller");
+router.post("/api/expenses/addExpenseByUser", auth_controller_1.auth, auth_controller_1.userStatus, expense_controller_1.addExpense);
+router.post("/api/expenses/getExpenseByUser", auth_controller_1.auth, auth_controller_1.userStatus, expense_controller_1.getExpenseByUser);
+router.delete("/api/expenses/deleteExpense/:expenseID", auth_controller_1.auth, auth_controller_1.userStatus, expense_controller_1.deleteExpense);
+router.get("/api/expenses/getAllExpenses", expense_controller_1.getAllExpenses);
+exports.default = router;
