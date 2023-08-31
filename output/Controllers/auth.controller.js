@@ -182,7 +182,7 @@ const handleRedirect = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 IDCardNum: (prevUser === null || prevUser === void 0 ? void 0 : prevUser.IDCardNum)
                     ? (0, generateUID_1.default)(prevUser)
                     : "RCN" + new Date().getFullYear() + "0A01",
-                refreshToken: zod_1.z.string().parse(tokens.refresh_token),
+                refreshToken: tokens.refresh_token,
             },
             update: {
                 email: user.email,
