@@ -56,46 +56,17 @@ const auth = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () 
     }
     catch (error) {
         if (error.name === "TokenExpiredError") {
-            try {
-                const email = jwt.decode(accessToken);
-                const user = yield db_1.default.users.findFirst({
-                    where: {
-                        email: zod_1.z.string().parse(email),
-                    },
-                });
-                jwt.verify(zod_1.z.string().parse(user === null || user === void 0 ? void 0 : user.refreshToken), secrets_1.default.refreshTokenSecret);
-                const newAccessToken = jwt.sign({ data: email }, secrets_1.default.accessTokenSecret, {
-                    expiresIn: "24h",
-                });
-                res.cookie("accessToken", newAccessToken, {
-                    expires: new Date(Date.now() + 3600000 * 24),
-                    domain: secrets_1.default.serverURL,
-                    path: "/api",
-                    httpOnly: true,
-                    sameSite: "none",
-                    secure: true,
-                });
-                res.locals.email = email;
-                next();
-            }
-            catch (error) {
-                console.log(error);
-                if (error.message === "TokenExpiredError") {
-                    res.clearCookie("accessToken", {
-                        expires: new Date(Date.now() + 3600000 * 24),
-                        domain: secrets_1.default.serverURL,
-                        path: "/api",
-                        httpOnly: true,
-                        sameSite: "none",
-                        secure: true,
-                    });
-                    return res
-                        .status(401)
-                        .json({ message: "Session expired!" });
-                }
-                return res.status(500).json({ message: "An error occurred!" });
-            }
+            res.clearCookie("accessToken", {
+                expires: new Date(Date.now() + 3600000 * 24),
+                domain: secrets_1.default.serverURL,
+                path: "/api",
+                httpOnly: true,
+                sameSite: "none",
+                secure: true,
+            });
+            return res.status(401).json({ message: "Session expired!" });
         }
+        return res.status(500).json({ message: "An error occurred!" });
     }
 });
 exports.auth = auth;
