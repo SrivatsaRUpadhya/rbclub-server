@@ -46,7 +46,7 @@ async function sendMail() {
 			to,
 			bcc,
 			subject: "Urgent! Complete Your Robotics Club Registration Today",
-			text: `<!DOCTYPE html>
+			html: `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">

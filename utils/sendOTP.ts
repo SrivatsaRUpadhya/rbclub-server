@@ -25,7 +25,7 @@ async function sendMail(email: string) {
 			from: "Robotics Club",
 			to: email,
 			subject: "Registration successful",
-			text: `<!DOCTYPE html>
+			html: `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
