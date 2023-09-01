@@ -24,7 +24,6 @@ const auth: RequestHandler = async (
 		res.locals.email = data.data;
 		next();
 	} catch (error: any) {
-		if (error.name === "TokenExpiredError") {
 			res.clearCookie("accessToken", {
 				expires: new Date(Date.now() + 3600000 * 24),
 				domain: secrets.serverURL,
@@ -34,8 +33,6 @@ const auth: RequestHandler = async (
 				secure: true,
 			});
 			return res.status(401).json({ message: "Session expired!" });
-		}
-		return res.status(500).json({ message: "An error occurred!" });
 	}
 };
 
