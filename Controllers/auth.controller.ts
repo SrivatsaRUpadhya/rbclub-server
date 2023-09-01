@@ -310,20 +310,11 @@ const deleteAccount = async (req: Request, res: Response) => {
 };
 const deleteUserById = async (req: Request, res: Response) => {
 	await asyncWrapper(req, res, async (req: Request, res: Response) => {
-		const email = res.locals.user;
 		const { userID } = req.body;
 		await prisma.users.delete({
 			where: {
 				userID,
 			},
-		});
-		res.clearCookie("accessToken", {
-			expires: new Date(Date.now() + 3600000),
-			domain: secrets.serverURL,
-			path: "/api",
-			httpOnly: true,
-			sameSite: "none",
-			secure: true,
 		});
 		return res.status(200).json({ message: "success" });
 	});

@@ -315,20 +315,11 @@ const deleteAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.deleteAccount = deleteAccount;
 const deleteUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield (0, asyncWrapper_1.default)(req, res, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        const email = res.locals.user;
         const { userID } = req.body;
         yield db_1.default.users.delete({
             where: {
                 userID,
             },
-        });
-        res.clearCookie("accessToken", {
-            expires: new Date(Date.now() + 3600000),
-            domain: secrets_1.default.serverURL,
-            path: "/api",
-            httpOnly: true,
-            sameSite: "none",
-            secure: true,
         });
         return res.status(200).json({ message: "success" });
     }));

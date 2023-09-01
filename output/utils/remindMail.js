@@ -12,14 +12,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const db_1 = __importDefault(require("./db"));
 const oauth2Client_1 = __importDefault(require("./oauth2Client"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const secrets_1 = __importDefault(require("./secrets"));
 const zod_1 = require("zod");
+const remind = () => __awaiter(void 0, void 0, void 0, function* () {
+    const notPaidUsers = yield db_1.default.users.findMany({
+        where: { paymentID: null },
+        select: { email: true },
+    });
+    console.log(notPaidUsers[0]);
+    console.log(notPaidUsers.length);
+    console.log("------------------------------");
+    var notPaidEmails = [];
+    notPaidUsers.map((user) => {
+        notPaidEmails.push(user.email);
+    });
+    const to = notPaidEmails.shift();
+    return { to, bcc: notPaidEmails };
+});
+remind();
 //Send the email containg the otp
-function sendMail(email) {
+function sendMail() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            const { to, bcc } = yield remind();
             const access_Token = yield oauth2Client_1.default.getAccessToken();
             //Create nodemailer transport object
             const transporter = nodemailer_1.default.createTransport({
@@ -36,14 +54,15 @@ function sendMail(email) {
             //Generate message
             const message = {
                 from: "Robotics Club",
-                to: email,
-                subject: "Registration successful",
+                to,
+                bcc,
+                subject: "Urgent! Complete Your Robotics Club Registration Today",
                 text: `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Robotics Club Nitte!</title>
+    <title> Robotics Club Nitte</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -94,7 +113,6 @@ function sendMail(email) {
         }
 
         .social-icons a {
-            display: inline-block;
             margin: 0 10px;
         }
 
@@ -109,32 +127,42 @@ function sendMail(email) {
 
     <div class="email-container">
         <div class="header">
-            <h1>Welcome to Robotics Club Nitte!</h1>
+            <h1>Robotics Club Nitte</h1>
         </div>
 
         <div class="content">
-            <p>Dear member,</p>
+            <p>Dear Student,</p>
 
-            <p>Congratulations and a warm welcome to Robotics Club Nitte! We're excited to have you on board and look forward to an incredible journey together. Your registration process is now complete, and we're thrilled to officially welcome you to our community.</p>
+            <p>We hope this email finds you well. We wanted to remind you that the registration for the Robotics Club is about to close, and we noticed that your registration is not yet complete. There are only a few slots left, and we wouldn't want you to miss out on this exciting opportunity.</p>
 
-            <p>Here are the key details you need to know:</p>
+            <p>Completing your registration is easy for me. Follow these steps:</p>
 
-            <ol>
-                <li><strong>Access to Dashboard:</strong> You now have full access to the dashboard of our website. Here, you'll find a wealth of resources, updates, and information about upcoming events, workshops, and projects. Feel free to explore and make the most of this platform.</li>
-                <li><strong>Workshop Details:</strong> We're currently finalizing the details for our upcoming workshops. Rest assured, you'll be among the first to receive information about these exciting learning opportunities. Stay tuned for emails with workshop schedules, topics, and registration instructions.</li>
-                <li><strong>Stay Connected:</strong> As a member of Robotics Club Nitte, you're a vital part of our community. We encourage you to engage with fellow members, share your ideas, and collaborate on projects. Follow us on our social media channels to stay updated and connected.</li>
-            </ol>
+            <p><strong>Visit Our Registration Page:</strong></p>
+            <p>Go to <a href="https://dashboard.roboticsclubnitte.com/register">https://dashboard.roboticsclubnitte.com/register</a> to access the registration form.</p>
 
-            <p>Once again, welcome to Robotics Club Nitte! If you have any questions, concerns, or suggestions, please don't hesitate to reach out to us.</p>
+            <p><strong>Provide the Required Information:</strong></p>
+            <p>Fill in the necessary details in the registration form. Make sure to double-check your contact information and all other fields marked as mandatory.</p>
 
-            <p>Here's to an inspiring and innovative journey ahead!</p>
+            <p>Once your payment is completed make sure that you will provide the proper Transaction ID in the respective field given below the QR code.</p>
+
+            <p>Remember, there are only a few slots left, and the registration will be closing very soon. Complete your registration today to secure your spot in the Robotics Club.</p>
+
+            <p>"Unlock Your Potential with the Robotics Club Nitte!"</p>
+
+            <p>Ignite your passion for robotics and innovation with us. Join a community of like-minded enthusiasts who are shaping the future of technology.</p>
+
+            <p>If you are facing issues registering or for any queries, feel free to contact:</p>
+            <p>Kanzal : +91 9902583612</p>
+            <p>Shashank: +91 9483229302</p>
+
+            <p>Thank you for your interest in the Robotics Club. We look forward to welcoming you as a member!</p>
 
             <p>Best regards,</p>
         </div>
 
         <div class="footer">
-            <p>&copy; 2023 Robotics Club Nitte. All rights reserved. | For more information, visit our <a href="https://roboticsclubnitte.com/">website</a>.</p>
-            <div class="social-icons">
+            <p>&copy; 2023 Robotics Club Nitte. All rights reserved. | For more information, visit our <a href="https://roboticsclubnitte.com" style="color: #ffffff; text-decoration: none; font-weight: bold;">website</a>.</p>
+            <div class="social-icons" style="margin-top: 10px; text-align: center;">
                 <a href="https://www.instagram.com/roboticsclub_nitte/?hl=en" style="color: #007bff; text-decoration: none;">Instagram</a>
             </div>
         </div>
@@ -151,4 +179,4 @@ function sendMail(email) {
         }
     });
 }
-exports.default = sendMail;
+sendMail();
