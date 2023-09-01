@@ -24,15 +24,15 @@ const auth: RequestHandler = async (
 		res.locals.email = data.data;
 		next();
 	} catch (error: any) {
-			res.clearCookie("accessToken", {
-				expires: new Date(Date.now() + 3600000 * 24),
-				domain: secrets.serverURL,
-				path: "/api",
-				httpOnly: true,
-				sameSite: "none",
-				secure: true,
-			});
-			return res.status(401).json({ message: "Session expired!" });
+		res.clearCookie("accessToken", {
+			expires: new Date(Date.now() + 3600000 * 24),
+			domain: secrets.serverURL,
+			path: "/api",
+			httpOnly: true,
+			sameSite: "none",
+			secure: true,
+		});
+		return res.status(401).json({ message: "Session expired!" });
 	}
 };
 

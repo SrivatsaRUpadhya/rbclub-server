@@ -55,18 +55,15 @@ const auth = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () 
         next();
     }
     catch (error) {
-        if (error.name === "TokenExpiredError") {
-            res.clearCookie("accessToken", {
-                expires: new Date(Date.now() + 3600000 * 24),
-                domain: secrets_1.default.serverURL,
-                path: "/api",
-                httpOnly: true,
-                sameSite: "none",
-                secure: true,
-            });
-            return res.status(401).json({ message: "Session expired!" });
-        }
-        return res.status(500).json({ message: "An error occurred!" });
+        res.clearCookie("accessToken", {
+            expires: new Date(Date.now() + 3600000 * 24),
+            domain: secrets_1.default.serverURL,
+            path: "/api",
+            httpOnly: true,
+            sameSite: "none",
+            secure: true,
+        });
+        return res.status(401).json({ message: "Session expired!" });
     }
 });
 exports.auth = auth;
