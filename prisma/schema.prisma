@@ -9,33 +9,34 @@ datasource db {
 }
 
 model Users {
-  id           BigInt      @id @default(autoincrement())
-  userID       String      @unique @default(uuid())
-  IDCardNum	   String?
-  name         String?
-  phone        String?
-  usn          String?
-  email        String      @unique
-  course	   courses?
-  password     String?
-  profileImg   String?
-  role         roles       @default(MEMBER)
-  hasAccessTo  accesses    @default(NO_EDIT_ACCESS)
-  Inventory    Inventory[] 
-  Events       Events[]
-  skills	   skills?
-  dob		   DateTime?
-  eventID      String?
-  expenses     Expenses[]
-  isVerified   Boolean     @default(false)
-  attendance   Int			@default(0)
-  paymentID String?
-  paymentStatus paymentStatus @default(PENDING)
-  isProfileComplete   Boolean     @default(false)
-  refreshToken String?      @db.Text
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  yearOfStudy  Int?
+  id                BigInt        @id @default(autoincrement())
+  userID            String        @unique @default(uuid())
+  IDCardNum         String?
+  name              String?
+  phone             String?
+  usn               String?
+  email             String        @unique
+  course            courses?
+  password          String?
+  profileImg        String?
+  role              roles         @default(MEMBER)
+  hasAccessTo       accesses      @default(NO_EDIT_ACCESS)
+  Inventory         Inventory[]
+  Events            Events[]
+  skills            skills?
+  dob               DateTime?
+  eventID           String?
+  expenses          Expenses[]
+  isVerified        Boolean       @default(false)
+  attendance        Int           @default(0)
+  paymentID         String?
+  paymentStatus     paymentStatus @default(PENDING)
+  isProfileComplete Boolean       @default(false)
+  refreshToken      String?       @db.Text
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  yearOfStudy       Int?
+
   @@index([id])
   @@index([email])
   @@index([eventID])
@@ -91,16 +92,16 @@ model Events {
   @@index([userID])
 }
 
-model Settings{
-	id Int @id @default(autoincrement())
-	maintenanceMode Boolean @default(false)
-	eventLimitPerUser Int @default(-1)
-	skipOtpOnRegister Boolean @default(false)
-	lastUpdatedBy String? 
-	createdAt DateTime @default(now())
-	updatedAt DateTime @default(now())
+model Settings {
+  id                Int      @id @default(autoincrement())
+  maintenanceMode   Boolean  @default(false)
+  eventLimitPerUser Int      @default(-1)
+  skipOtpOnRegister Boolean  @default(false)
+  lastUpdatedBy     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now())
 
-	@@index([id])
+  @@index([id])
 }
 
 enum roles {
@@ -136,14 +137,14 @@ enum expense_catagories {
 }
 
 enum inventory_catagories {
-WARBOT
-STATIONARY
-BOT_BUILDING_WORKSHOP
-IOT
-INTERNET_OF_THINGS
-MODELLING
-MACHINE_LEARNING
-PCB_DESIGN
+  WARBOT
+  STATIONARY
+  BOT_BUILDING_WORKSHOP
+  IOT
+  INTERNET_OF_THINGS
+  MODELLING
+  MACHINE_LEARNING
+  PCB_DESIGN
 }
 
 enum status {
@@ -151,31 +152,31 @@ enum status {
   APPROVED
 }
 
-enum courses{
-    ARTIFICIAL_INTELLIGENCE_DATA_SCIENCE
-    ARTIFICIAL_INTELLIGENCE_MACHINE_LEARNING
-    BIOTECHNOLOGY
-    CIVIL_ENGINEERING
-    COMPUTER_COMMUNICATION_ENGINEERING
-    COMPUTER_SCIENCE_ENGINEERING
-    COMPUTER_SCIENCE_FULL_STACK_DEVELOPMENT
-    COMPUTER_SCIENCE_CYBER_SECURITY
-	ELECTRICAL_ELECTRONICS_ENGINEERING
-    ELECTRONICS_COMMUNICATION_ENGINEERING
-    ELECTRONICS_VLSI_DESIGN_TECHNOLOGY
-    INFORMATION_SCIENCE_ENGINEERING
-    MECHANICAL_ENGINEERING
-    ROBOTICS_ARTIFICIAL_INTELLIGENCE
-	}
+enum courses {
+  ARTIFICIAL_INTELLIGENCE_DATA_SCIENCE
+  ARTIFICIAL_INTELLIGENCE_MACHINE_LEARNING
+  BIOTECHNOLOGY
+  CIVIL_ENGINEERING
+  COMPUTER_COMMUNICATION_ENGINEERING
+  COMPUTER_SCIENCE_ENGINEERING
+  COMPUTER_SCIENCE_FULL_STACK_DEVELOPMENT
+  COMPUTER_SCIENCE_CYBER_SECURITY
+  ELECTRICAL_ELECTRONICS_ENGINEERING
+  ELECTRONICS_COMMUNICATION_ENGINEERING
+  ELECTRONICS_VLSI_DESIGN_TECHNOLOGY
+  INFORMATION_SCIENCE_ENGINEERING
+  MECHANICAL_ENGINEERING
+  ROBOTICS_ARTIFICIAL_INTELLIGENCE
+}
 
-	enum paymentStatus{
-		PENDING
-		RECEIVED
-	}
+enum paymentStatus {
+  PENDING
+  RECEIVED
+}
 
-	enum skills{
-	NEWBIE_EXPLORATIONS
-	TAKING_STEPS_BEYOND_BASICS
-	GETTING_THE_HANG_OF_THINGS
-	MASTER_OF_THE_CRAFT
-		}
+enum skills {
+  NEWBIE_EXPLORATIONS
+  TAKING_STEPS_BEYOND_BASICS
+  GETTING_THE_HANG_OF_THINGS
+  MASTER_OF_THE_CRAFT
+}
