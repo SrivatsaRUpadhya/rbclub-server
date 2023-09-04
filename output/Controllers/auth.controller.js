@@ -138,30 +138,41 @@ const handleRedirect = (req, res) => __awaiter(void 0, void 0, void 0, function*
         //Register or login the user
         const allUsers = yield db_1.default.users.findMany();
         const prevUser = allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
-        yield db_1.default.users.upsert({
-            where: {
-                email: user.email,
-            },
-            create: {
-                email: zod_1.z.string().parse(user.email),
-                isVerified: user.email_verified,
-                profileImg: user.picture,
-                name: user.name,
-                IDCardNum: (prevUser === null || prevUser === void 0 ? void 0 : prevUser.IDCardNum)
-                    ? (0, generateUID_1.default)(prevUser)
-                    : "RCN" + new Date().getFullYear() + "0A01",
-                refreshToken: tokens.refresh_token,
-            },
-            update: {
-                email: user.email,
-                isVerified: user.email_verified,
-                profileImg: user.picture,
-                name: user.family_name,
-                IDCardNum: (prevUser === null || prevUser === void 0 ? void 0 : prevUser.IDCardNum)
-                    ? (0, generateUID_1.default)(prevUser)
-                    : "RCN" + new Date().getFullYear() + "0A01",
-            },
-        });
+        const data = yield getUserByEmail(zod_1.z.string().parse(user.email));
+        if (data) {
+            db_1.default.users.update({
+                where: { email: user.email },
+                data: {
+                    email: user.email,
+                    isVerified: user.email_verified,
+                    profileImg: user.picture,
+                    name: user.family_name,
+                    IDCardNum: (prevUser === null || prevUser === void 0 ? void 0 : prevUser.IDCardNum)
+                        ? (0, generateUID_1.default)(prevUser)
+                        : "RCN" + new Date().getFullYear() + "0A01",
+                },
+            });
+        }
+        else {
+            const settings = yield db_1.default.settings.findFirst();
+            if (settings === null || settings === void 0 ? void 0 : settings.maintenanceMode) {
+                return res
+                    .status(200)
+                    .redirect(`${secrets_1.default.clientURL_2}/register?error=Sorry, Registrations are no longer open!`);
+            }
+            yield db_1.default.users.create({
+                data: {
+                    email: zod_1.z.string().parse(user.email),
+                    isVerified: user.email_verified,
+                    profileImg: user.picture,
+                    name: user.name,
+                    IDCardNum: (prevUser === null || prevUser === void 0 ? void 0 : prevUser.IDCardNum)
+                        ? (0, generateUID_1.default)(prevUser)
+                        : "RCN" + new Date().getFullYear() + "0A01",
+                    refreshToken: tokens.refresh_token,
+                },
+            });
+        }
         //Generate and send accessToken
         const accessToken = jwt.sign({ data: zod_1.z.string().parse(user.email) }, secrets_1.default.accessTokenSecret, {
             expiresIn: "24h",

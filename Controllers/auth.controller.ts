@@ -119,30 +119,42 @@ const handleRedirect = async (req: Request, res: Response) => {
 		const prevUser =
 			allUsers.length > 0 ? allUsers[allUsers.length - 1] : null;
 
-		await prisma.users.upsert({
-			where: {
-				email: user.email,
-			},
-			create: {
-				email: z.string().parse(user.email),
-				isVerified: user.email_verified,
-				profileImg: user.picture,
-				name: user.name,
-				IDCardNum: prevUser?.IDCardNum
-					? generateUID(prevUser)
-					: "RCN" + new Date().getFullYear() + "0A01",
-				refreshToken: tokens.refresh_token,
-			},
-			update: {
-				email: user.email,
-				isVerified: user.email_verified,
-				profileImg: user.picture,
-				name: user.family_name,
-				IDCardNum: prevUser?.IDCardNum
-					? generateUID(prevUser)
-					: "RCN" + new Date().getFullYear() + "0A01",
-			},
-		});
+		const data = await getUserByEmail(z.string().parse(user.email));
+		if (data) {
+			prisma.users.update({
+				where: { email: user.email },
+				data: {
+					email: user.email,
+					isVerified: user.email_verified,
+					profileImg: user.picture,
+					name: user.family_name,
+					IDCardNum: prevUser?.IDCardNum
+						? generateUID(prevUser)
+						: "RCN" + new Date().getFullYear() + "0A01",
+				},
+			});
+		} else {
+			const settings = await prisma.settings.findFirst();
+			if (settings?.maintenanceMode) {
+				return res
+					.status(200)
+					.redirect(
+						`${secrets.clientURL_2}/register?error=Sorry, Registrations are no longer open!`
+					);
+			}
+			await prisma.users.create({
+				data: {
+					email: z.string().parse(user.email),
+					isVerified: user.email_verified,
+					profileImg: user.picture,
+					name: user.name,
+					IDCardNum: prevUser?.IDCardNum
+						? generateUID(prevUser)
+						: "RCN" + new Date().getFullYear() + "0A01",
+					refreshToken: tokens.refresh_token,
+				},
+			});
+		}
 
 		//Generate and send accessToken
 		const accessToken = jwt.sign(
