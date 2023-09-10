@@ -191,11 +191,36 @@ const setUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.setUserInfo = setUserInfo;
 const downloadUsersList = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield (0, asyncWrapper_1.default)(req, res, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        const { Type } = req.body;
         if (res.locals.user.hasAccessTo === "ADMIN" ||
             res.locals.user.hasAccessTo === "SUPERUSER") {
             try {
                 yield fs_1.default.promises.appendFile("list.csv", `Name,RCNID,USN,Email,Phone,RegisteredOn,PaymentID,PaymentStatus`);
-                const users = yield getAllUsers();
+                var users = [];
+                if (Type == "RECEIVED") {
+                    users = yield db_1.default.users.findMany({
+                        where: {
+                            paymentStatus: "RECEIVED",
+                        },
+                        select: {
+                            id: false,
+                            userID: true,
+                            IDCardNum: true,
+                            name: true,
+                            usn: true,
+                            email: true,
+                            phone: true,
+                            role: true,
+                            createdAt: true,
+                            hasAccessTo: true,
+                            paymentID: true,
+                            paymentStatus: true,
+                        },
+                    });
+                }
+                else {
+                    users = yield getAllUsers();
+                }
                 yield Promise.all(users.map((element) => __awaiter(void 0, void 0, void 0, function* () {
                     try {
                         yield fs_1.default.promises.appendFile("list.csv", `${os_1.default.EOL}${element.name},${element.IDCardNum},${element.usn},${element.email},${element.phone},${element.createdAt},${element.paymentID},${element.paymentStatus}`);

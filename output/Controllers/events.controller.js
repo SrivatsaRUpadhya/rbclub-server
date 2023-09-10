@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -12,11 +35,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteEvent = exports.registerForEvent = exports.editEvent = exports.verifyAccessToEvents = exports.getEvents = exports.addEvent = void 0;
+exports.UserListbyEvent = exports.deleteEvent = exports.registerForEvent = exports.editEvent = exports.verifyAccessToEvents = exports.getEvents = exports.addEvent = void 0;
 const db_1 = __importDefault(require("../utils/db"));
 const asyncWrapper_1 = __importDefault(require("../utils/asyncWrapper"));
 const zod_1 = require("zod");
 const auth_controller_1 = require("./auth.controller");
+const os = __importStar(require("os"));
+const fs = __importStar(require("fs"));
 const verifyAccessToEvents = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = res.locals.user;
@@ -41,6 +66,9 @@ const fetchEvents = (fetchType) => __awaiter(void 0, void 0, void 0, function* (
             select: {
                 id: false,
                 users: {
+                    where: {
+                        paymentStatus: "RECEIVED",
+                    },
                     select: {
                         userID: true,
                         name: true,
@@ -192,3 +220,56 @@ const getEvents = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }));
 });
 exports.getEvents = getEvents;
+const UserListbyEvent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, asyncWrapper_1.default)(req, res, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        const user = res.locals.user;
+        if ((user === null || user === void 0 ? void 0 : user.hasAccessTo) === "ADMIN" ||
+            (user === null || user === void 0 ? void 0 : user.hasAccessTo) === "EVENTS" ||
+            (user === null || user === void 0 ? void 0 : user.hasAccessTo) === "SUPERUSER") {
+            try {
+                const { EventId } = req.body;
+                const event = yield db_1.default.events.findUnique({
+                    where: {
+                        eventID: EventId,
+                    },
+                    select: {
+                        eventName: true,
+                        users: {
+                            where: {
+                                paymentStatus: "RECEIVED",
+                            },
+                            select: {
+                                name: true,
+                                IDCardNum: true,
+                                usn: true,
+                            },
+                        },
+                    },
+                });
+                yield fs.promises.appendFile(`${event === null || event === void 0 ? void 0 : event.eventName}.csv`, `Name,RCNID,USN`);
+                yield Promise.all(event === null || event === void 0 ? void 0 : event.users.map((element) => __awaiter(void 0, void 0, void 0, function* () {
+                    try {
+                        yield fs.promises.appendFile(`${event === null || event === void 0 ? void 0 : event.eventName}.csv`, `${os.EOL}${element.name},${element.IDCardNum},${element.usn}`);
+                    }
+                    catch (error) {
+                        throw error;
+                    }
+                })));
+                res.download(`${event === null || event === void 0 ? void 0 : event.eventName}.csv`, (err) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                });
+                yield fs.promises.rm(`${event === null || event === void 0 ? void 0 : event.eventName}.csv`);
+            }
+            catch (error) {
+                console.log(error);
+                return res.status(200).json({ message: "An error occurred!" });
+            }
+        }
+        else {
+            return res.status(403).json({ message: "Not Authorized!" });
+        }
+    }));
+});
+exports.UserListbyEvent = UserListbyEvent;

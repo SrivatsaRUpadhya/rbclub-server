@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "clubwebsite-393611",
+  "private_key_id": "d1c6c55d190e0decbd648ffe80803b5fe51cd434",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCyxKwQCtIj22Pt\nbTmZQb+JMDP0bfMfeV0595QCgK+df6E6VSMtYdbngrqHBdKx26gcCwYRUMq6Apzw\nfD5E+3xEQNc9w50f7cNDCG5LnEQKANEpCmwVVJ3/MletOAAp2IGtSoKfvhzgH7IW\nlKPpOKqIA809nLmmRX5YY5V7VO1iVkcU3vtSR+F4SU0s5gAhjWbDq6kzmLgyzXjZ\nuzoKKIHH3in1v0zv6Mun/8mtzLGXuicqnHts1DMuL8Hflbrl4fa/C7Efs6Dqnf5w\nVeY/gkx79B7GoKC7ct4AkCeslo0wyCm5qc3dMgzVbUDDG0rKZh7uXMjIgjkyvM/i\nLpF5okGXAgMBAAECggEARoaelwmd07WW27FOmu68YKQaqyDBXLZlmBvbUY1xOwKC\nGeBCq4HA5b7GVcRvVemhjcavkx87i1zCi4GIk3BfmxG1mNFWaKVFdmmaEcxJb2TZ\nH4bUEyo51tcGjfjc36Vhq3sMw3aeL7FxccUcUUMgy94sF1WATF94M+i9rVVY/YUB\nZAQegKtJYoy9C16fP4cq3DsU8Hwc7juCcS/LSjjVRjonE+5arwX+AnZY0dF6UmDU\nxk0vy122KT9SPjb/AuC/gML9Rb11WG82fCeT4wIRDMNCNNvAxxQPFo++1ekiXjph\nsFlMaObanBkTPs+9xRN4TAx3ORPiKKfvDykeoM15oQKBgQDW18as69KCRCkVwry4\nLWAFr/3oN4XgARPCfyGLRjtadMN6Nbd9g00gEwTNzGQtaM28WBZlOY9tLjt9es8G\n3+4nKObAKGiyMLSn+O4kQaw9dnBvF7/Bx59r6CQA392ScNhLQLCOwP/WousnSdyY\nsTqpr1BGePwqmgeT82jgAjwNJwKBgQDVA727tqbbwS35NpQSN7NUvudbvM2mTDyp\nRG3GeBSlMLZpjG4f/Ox+rLry7ZL417sCBmCtqn737s9jvHDJaVW4x1HN1q4kuC7g\nOwGdY+juHG7apN5W+oLRMSNQKUBPBtLKHjU2LVe7m98wVkX8vJbsfkgIjE6gdUy6\nWj1uwHDOEQKBgCde/4+s37TznLvaJg9ycUhZiiRGGIiGagKYnaMSSco336LDuU6N\nA1M/aP/11t3jeOBtHB2MwNX3RPunx8ywuMoAWtkYDqeo+VJW8f0+87uHuu8A4Sk3\n1eVGc2Kdo9M0Ts7rme9vOvMwg/t9M6nfwKpb8FAZ18xO0dixIKT8g9i9AoGBAK9R\nU/BSJUTK2v65B+dyhptiP+LGIvAS4P5jfoIRxNQsooV+egjDzxV3LqrQE93RGG5T\nN3DX2YZPu8sXhjCPDGl3SwHCBjPcj2An0G1slIKdTjOP7BrkNZTc/3ZzbSVdtVF6\nyUrcyM91O5159EJOKV1dlgXLDM+Nm2fo65TiuDUxAoGASK9sMy+nrdHQ4fQaQHOl\n7rc6+A66R3iU/Q4mUJdmEFY8HtmJudO0y9XNylNhEj/pq6JH0YVC6IwSBPe1jP3E\ngNmJKzOva0YgFM3ou3Um9xI65kH7xIlGeUNpchdU3OAcGjnANfTmw/qHpQIhq55q\nTGoODD7tXuPTOSi0tiOgEFE=\n-----END PRIVATE KEY-----\n",
+  "client_email": "roboicsclubdata@clubwebsite-393611.iam.gserviceaccount.com",
+  "client_id": "110709887468294107781",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/roboicsclubdata%40clubwebsite-393611.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

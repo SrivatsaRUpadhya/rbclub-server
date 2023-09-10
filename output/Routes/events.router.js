@@ -8,5 +8,6 @@ router.post("/api/events/addEvents", auth_controller_1.auth, auth_controller_1.u
 router.post("/api/events/getAllEvents", auth_controller_1.auth, auth_controller_1.userStatus, events_controller_1.getEvents);
 router.post("/api/events/editEventById", auth_controller_1.auth, auth_controller_1.userStatus, events_controller_1.verifyAccessToEvents, events_controller_1.editEvent);
 router.post("/api/events/deleteEventById", auth_controller_1.auth, auth_controller_1.userStatus, events_controller_1.verifyAccessToEvents, events_controller_1.deleteEvent);
+router.post("/api/events/userListByEvent", auth_controller_1.auth, auth_controller_1.userStatus, events_controller_1.verifyAccessToEvents, events_controller_1.UserListbyEvent);
 router.post("/api/events/register", auth_controller_1.auth, events_controller_1.registerForEvent);
 exports.default = router;

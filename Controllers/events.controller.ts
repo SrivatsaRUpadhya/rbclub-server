@@ -5,6 +5,8 @@ import { z } from "zod";
 import { getUserByEmail } from "./auth.controller";
 import { Users } from "@prisma/client";
 import { userType } from "../utils/customTypes";
+import * as os from "os";
+import * as fs from "fs";
 const verifyAccessToEvents = async (
 	req: Request,
 	res: Response,
@@ -34,6 +36,9 @@ const fetchEvents = async (fetchType?: "Admin") => {
 				select: {
 					id: false,
 					users: {
+						where: {
+							paymentStatus: "RECEIVED",
+						},
 						select: {
 							userID: true,
 							name: true,
@@ -204,6 +209,67 @@ const getEvents = async (req: Request, res: Response) => {
 	});
 };
 
+const UserListbyEvent = async (req: Request, res: Response) => {
+	await asyncWrapper(req, res, async (req: Request, res: Response) => {
+		const user: Users = res.locals.user;
+		if (
+			user?.hasAccessTo === "ADMIN" ||
+			user?.hasAccessTo === "EVENTS" ||
+			user?.hasAccessTo === "SUPERUSER"
+		) {
+			try {
+				const { EventId } = req.body;
+
+				const event = await prisma.events.findUnique({
+					where: {
+						eventID: EventId,
+					},
+					select: {
+						eventName: true,
+						users: {
+							where: {
+								paymentStatus: "RECEIVED",
+							},
+							select: {
+								name: true,
+								IDCardNum: true,
+								usn: true,
+							},
+						},
+					},
+				});
+				await fs.promises.appendFile(
+					`${event?.eventName}.csv`,
+					`Name,RCNID,USN`
+				);
+				await Promise.all<any>(
+					event?.users.map(async (element) => {
+						try {
+							await fs.promises.appendFile(
+								`${event?.eventName}.csv`,
+								`${os.EOL}${element.name},${element.IDCardNum},${element.usn}`
+							);
+						} catch (error) {
+							throw error;
+						}
+					})
+				);
+				res.download(`${event?.eventName}.csv`, (err) => {
+					if (err) {
+						console.log(err);
+					}
+				});
+				await fs.promises.rm(`${event?.eventName}.csv`);
+			} catch (error) {
+				console.log(error);
+				return res.status(200).json({ message: "An error occurred!" });
+			}
+		} else {
+			return res.status(403).json({ message: "Not Authorized!" });
+		}
+	});
+};
+
 export {
 	addEvent,
 	getEvents,
@@ -211,4 +277,5 @@ export {
 	editEvent,
 	registerForEvent,
 	deleteEvent,
+	UserListbyEvent,
 };

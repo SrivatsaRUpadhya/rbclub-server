@@ -19,7 +19,7 @@ function generateUID(prevUser) {
     else {
         newIDNum =
             prevIDNum + 1 < 10
-                ? "0".concat(prevIDNum.toString() + 1)
+                ? "0".concat((prevIDNum + 1).toString())
                 : String(prevIDNum + 1);
     }
     return UID.concat(newVerNum.toString(), newVerChar, newIDNum);
